@@ -1,0 +1,9 @@
+{% if request.user_agent.is_pc %}
+    {% include 'map/map_desktop.html' %}
+{% endif %}
+{% if request.user_agent.is_mobile %}
+    {% include 'map/map_mobile.html' %}
+{% endif %}
+{% if request.user_agent.is_tablet %}
+    {% include 'map/map_tablet.html' %}
+{% endif %}

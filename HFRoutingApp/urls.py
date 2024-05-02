@@ -18,7 +18,9 @@ from django.contrib import admin
 from django.urls import path
 
 from HFRoutingApp import views
+from .views.main_views import *
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path("", index, name="index"),
+    path("show_map", show_map, name="show_map"),
 ]

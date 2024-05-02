@@ -1,0 +1,26 @@
+{% load static %}
+<link rel="stylesheet" type="text/css"
+      href="{% static 'stylesheets/components/navbar.css' %}"/>
+<nav class="navbar">
+    <div class="container">
+        <a href="#" class="logo"><img src="https://healthyfridge.nl/wp-content/uploads/2020/02/HF-Logo-website-def.png"
+                                      alt="Company Logo"></a>
+        <ul class="nav-links">
+            {% if user.groups.all.0.name == "planner" %}
+                <li><a href="#">Home</a></li>
+                <li><a href="{% url 'show_map' %}">Map</a></li>
+                <li><a href="#">Routes</a></li>
+                <li><a href="{% url 'admin:index' %}">Admin</a></li>
+            {% elif user.groups.all.0.name == "operator" %}
+                <li><a href="#">Mijn route</a></li>
+                <li><a href="#">Checklists</a></li>
+            {% endif %}
+            <li>
+                <form method="POST" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="logout-button" type="submit">Log uit</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
