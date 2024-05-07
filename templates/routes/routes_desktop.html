@@ -1,19 +1,24 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'images/favicon/hf_logo.png' %}" type="image/png">
     <script src="https://unpkg.com/htmx.org@1.4.1"></script>
+    <link rel="stylesheet" type="text/css"
+      href="{% static 'stylesheets/routes/routes_desktop.css' %}"/>
     <title>Routes</title>
 </head>
 <body>
 {% include 'components/navbar.html' %}
 <h1>Routes</h1>
-    <form hx-get="/your-view-url/" hx-target="#response" hx-swap="outerHTML">
-        <input type="date" name="date" id="date">
-        <button type="submit">Submit</button>
-    </form>
+<form hx-get="./show_routes_for_date" hx-target="#response" hx-swap="innerHTML">
+    <label for="date">Routes voor dag: </label>
+    <input type="date" name="date" id="date">
+    <button type="submit">Verzenden</button>
+</form>
 
-    <div id="response">
-    </div>
+<div id="response">
+</div>
 </body>
 </html>

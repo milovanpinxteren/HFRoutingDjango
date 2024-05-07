@@ -1,0 +1,9 @@
+.route-response {
+    max-width: 40%;
+    float: left;
+}
+
+.map-div {
+    min-width: 60%;
+    float: right;
+}

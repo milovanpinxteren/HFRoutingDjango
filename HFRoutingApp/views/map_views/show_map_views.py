@@ -31,6 +31,6 @@ def show_map(request):
     map_dict = {'hubs': hub_locations,
                 'customers': customer_locations,
                 'operators': operator_locations}
-    map = map_maker.make_map(map_dict)
+    map = map_maker.make_map(map_dict, 'full_map')
     context = {'map': map._repr_html_()}
     return render(request, 'map/map.html', context)
