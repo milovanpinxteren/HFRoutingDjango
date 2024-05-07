@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Healthy Fridge Map</title>
+    {% load static %}
+    <link rel="icon" href="{% static 'images/favicon/hf_logo.png' %}" type="image/png">
+
+<link rel="stylesheet" type="text/css"
+      href="{% static 'stylesheets/map/map_desktop.css' %}"/>
 </head>
 <body>
 {% include 'components/navbar.html' %}
-<h1>show map</h1>
+<div class="map-container">
+    {{ map|safe }}
+</div>
 </body>
 </html>

@@ -1,0 +1,9 @@
+{% if request.user_agent.is_pc %}
+    {% include 'routes/routes_desktop.html' %}
+{% endif %}
+{% if request.user_agent.is_mobile %}
+    {% include 'routes/routes_mobile.html' %}
+{% endif %}
+{% if request.user_agent.is_tablet %}
+    {% include 'routes/routes_tablet.html' %}
+{% endif %}

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Weekday, Customer, Location, LocationGroup, Operator, OperatorLocationLink, User, CateringOrder, \
-    Hub, Machine, Spot
+    Hub, Machine, Spot, Route
 
 
 class CustomerAdmin(admin.ModelAdmin):
@@ -34,6 +34,9 @@ class MachineAdmin(admin.ModelAdmin):
 class SpotAdmin(admin.ModelAdmin):
     list_display = [field.name for field in Spot._meta.fields]
 
+class RouteAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in Route._meta.fields]
+
 
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Location, LocationAdmin)
@@ -44,3 +47,4 @@ admin.site.register(CateringOrder, CateringOrderAdmin)
 admin.site.register(Hub, HubAdmin)
 admin.site.register(Machine, MachineAdmin)
 admin.site.register(Spot, SpotAdmin)
+admin.site.register(Route, RouteAdmin)

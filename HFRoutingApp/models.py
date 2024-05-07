@@ -135,3 +135,11 @@ class CateringOrder(models.Model):
     delivery_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE, default=0)
+
+
+class Route(models.Model):
+    name = models.CharField(max_length=100)
+    operator = models.ForeignKey(Operator, on_delete=models.CASCADE)
+    locations = models.ManyToManyField(Location)
+    order = models.CharField(max_length=1000) #array with the stops in driving order
+    day = models.DateField()

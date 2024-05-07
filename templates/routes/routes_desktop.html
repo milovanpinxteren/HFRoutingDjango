@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
+    <title>Routes</title>
+</head>
+<body>
+{% include 'components/navbar.html' %}
+<h1>Routes</h1>
+    <form hx-get="/your-view-url/" hx-target="#response" hx-swap="outerHTML">
+        <input type="date" name="date" id="date">
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="response">
+    </div>
+</body>
+</html>

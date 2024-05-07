@@ -9,10 +9,10 @@
             {% if user.groups.all.0.name == "planner" %}
                 <li><a href="#">Home</a></li>
                 <li><a href="{% url 'show_map' %}">Map</a></li>
-                <li><a href="#">Routes</a></li>
+                <li><a href="{% url 'show_routes_page' %}">Routes</a></li>
                 <li><a href="{% url 'admin:index' %}">Admin</a></li>
             {% elif user.groups.all.0.name == "operator" %}
-                <li><a href="#">Mijn route</a></li>
+                <li><a href="#">Mijn routes</a></li>
                 <li><a href="#">Checklists</a></li>
             {% endif %}
             <li>
