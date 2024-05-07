@@ -13,11 +13,15 @@
 {% include 'components/navbar.html' %}
 <h1>Routes</h1>
 <form hx-get="./show_routes_for_date" hx-target="#response" hx-swap="innerHTML">
-    <label for="date">Routes voor dag: </label>
+    <label for="date">Zie routes voor dag: </label>
     <input type="date" name="date" id="date">
     <button type="submit">Verzenden</button>
 </form>
-
+<form hx-get="./calculate_routes_for_date" hx-target="#response" hx-swap="innerHTML">
+    <label for="date">Bereken routes voor dag: </label>
+    <input type="date" name="date" id="date">
+    <button type="submit">Bereken</button>
+</form>
 <div id="response">
 </div>
 </body>

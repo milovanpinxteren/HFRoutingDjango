@@ -60,6 +60,8 @@ class Location(models.Model):
     geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
     fill_dates = models.ManyToManyField(Weekday, blank=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
+    opening_time = models.TimeField(_('opening time'), blank=True, null=True)
+    fill_time_minutes = models.IntegerField(default=0, blank=True, null=True)
     removal_probability = models.FloatField(_('removal probability'), blank=True,
                                             null=True)  # 0-1 used for cluster making and manual override
 
