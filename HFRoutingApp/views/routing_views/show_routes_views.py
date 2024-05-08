@@ -27,7 +27,7 @@ def show_routes_for_date(request):
                                               'lon': location['geolocation'].lon}
             locations_dict[location['id']] = info_dict
             map_data[route.name].append(info_dict)
-        response_data[route.id] = {'id': route.id, 'name': route.name, 'order': route.order, 'day': route.day,
+        response_data[route.id] = {'id': route.id, 'hub': route.hub,'name': route.name, 'order': route.order, 'day': route.day,
                                    'operator': route.operator.user.username, 'locations': locations_dict}
     map_obj = map_maker.make_map(map_data, 'routes')
     response = {'day': date, 'routes': response_data, 'map': map_obj._repr_html_()}

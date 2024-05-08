@@ -6,15 +6,14 @@ from django.contrib.auth.models import User
 
 class Weekday(models.Model):
     DAYS_OF_WEEK = [
-        (1, 'Monday'),
-        (2, 'Tuesday'),
-        (3, 'Wednesday'),
-        (4, 'Thursday'),
-        (5, 'Friday'),
-        (6, 'Saturday'),
-        (0, 'Sunday'),
+        (0, 'Maandag'),
+        (1, 'Dinsdag'),
+        (2, 'Woensdag'),
+        (3, 'Donderdag'),
+        (4, 'Vrijdag'),
+        (5, 'Zaterdag'),
+        (6, 'Zondag'),
     ]
-
     day = models.PositiveSmallIntegerField(choices=DAYS_OF_WEEK)
 
     def __str__(self):
@@ -58,12 +57,8 @@ class Location(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     address = map_fields.AddressField(_('address'), max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
-    fill_dates = models.ManyToManyField(Weekday, blank=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
     opening_time = models.TimeField(_('opening time'), blank=True, null=True)
-    fill_time_minutes = models.IntegerField(default=0, blank=True, null=True)
-    removal_probability = models.FloatField(_('removal probability'), blank=True,
-                                            null=True)  # 0-1 used for cluster making and manual override
 
     def __str__(self):
         return self.shortcode
@@ -82,15 +77,9 @@ class Machine(models.Model):
     external_id = models.SmallIntegerField()
     honesty_model = models.BooleanField(default=False)
 
+
     def __str__(self):
         return self.shortcode
-
-class LocationGroup(models.Model):
-    name = models.CharField(max_length=100)
-    locations = models.ManyToManyField(Location)
-
-    def __str__(self):
-        return self.name
 
 
 class Operator(models.Model):
@@ -127,7 +116,16 @@ class Spot(models.Model):
     resembles_id = models.IntegerField(default=None, blank=True, null=True)
     product_filter = models.IntegerField(default=None, blank=True, null=True)
     pilot = models.BooleanField(default=False)
-    spot_hours = models.IntegerField(default=0)
+    spot_hours = models.IntegerField(default=0) #if office or hospital
+    #Added columns
+    fill_dates = models.ManyToManyField(Weekday, blank=True)
+    avg_no_crates = models.FloatField(blank=True, null=True)
+    fill_time_minutes = models.IntegerField(default=0, blank=True, null=True)
+    walking_time_minutes = models.IntegerField(default=0, blank=True, null=True)
+    removal_probability = models.FloatField(_('removal probability'), blank=True,
+                                            null=True)  # 0-1 used for cluster making and manual override
+
+
 
     def __str__(self):
         return self.shortcode
@@ -139,9 +137,20 @@ class CateringOrder(models.Model):
     spot = models.ForeignKey(Spot, on_delete=models.CASCADE, default=0)
 
 
+class CateringOrderLine(models.Model):
+    catering_order = models.ForeignKey(CateringOrder, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=0)
+
+class PickListLine(models.Model):
+    distr_date = models.DateField()
+    quantity = models.IntegerField(default=0)
+    spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
+
 class Route(models.Model):
     name = models.CharField(max_length=100)
     operator = models.ForeignKey(Operator, on_delete=models.CASCADE)
     locations = models.ManyToManyField(Location)
     order = models.CharField(max_length=1000) #array with the stops in driving order
     day = models.DateField()
+    hub = models.ForeignKey(Hub, on_delete=models.CASCADE, default=0)
+

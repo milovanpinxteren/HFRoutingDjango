@@ -9,9 +9,10 @@ from HFRoutingApp.classes.routingclasses.stop_getter import StopGetter
 @login_required
 def calculate_routes_for_date(request):
     stop_getter = StopGetter()
-    penalty_calculator = PenaltyCalculator()
+    # penalty_calculator = PenaltyCalculator()
     date = request.GET.get('date', None)
-    print(date)
-    #TODO: get all stops
-    #TODO: calculate penalty for each stop
-    return render(request, 'routes/routes_overview.html')
+    stops = stop_getter.get_stops_on_date(date)
+    # TODO: assign stop to hub in crate is underway to hub
+
+    context = {'stops': stops}
+    return render(request, 'routes/routes_overview.html', context)

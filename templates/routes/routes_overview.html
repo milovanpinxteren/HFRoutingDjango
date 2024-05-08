@@ -4,7 +4,8 @@
         {% for id, route in routes.items %}
             <div style="display: inline-block; clear:both; outline: 1px solid black; margin-bottom: 5px">
                 <h5>Route ID: {{ route.id }}</h5>
-                <p><b>Name:</b> {{ route.name }} <br>
+                <p><b>Name:</b> {{ route.name }}
+                    <b>Hub:</b> {{ route.hub }}
                     <b>Chauffeur:</b> {{ route.operator }}</p>
                 <hr>
                 {% for location_id, location in route.locations.items %}
