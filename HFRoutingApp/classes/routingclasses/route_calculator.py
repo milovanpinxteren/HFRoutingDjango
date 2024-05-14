@@ -1,5 +1,7 @@
 class RouteCalculator:
     def compute_routes(self):
+        #TODO: start time of driver -> not yet incorporated but needs to
+
         """
         Objectives
         - Minimize Total Travel Costs
@@ -54,6 +56,4 @@ class RouteCalculator:
             - Drivers have different availability (e.g. on monday we have 10 drivers, wednesday 7)
             - Drivers are variable (vacation, sickness, etc)
             - What if a driver has 2 mandatory locations, in different clusters
-
-
         """
