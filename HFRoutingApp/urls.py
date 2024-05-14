@@ -12,5 +12,6 @@ urlpatterns = [
     path("show_routes_for_date", show_routes_for_date, name="show_routes_for_date"),
     path("calculate_routes_for_date", calculate_routes_for_date, name="calculate_routes_for_date"),
     path("make_clusters", calculate_clusters, name="make_clusters"),
+    path("make_base_routes", make_base_routes, name="make_base_routes"),
 
 ]

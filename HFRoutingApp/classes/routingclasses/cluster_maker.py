@@ -38,6 +38,7 @@ class ClusterMaker:
         for cluster_label in clusters:
             closest_hub = self.select_hub_for_cluster(clusters[cluster_label])
             clusters[cluster_label].append(closest_hub)
+            clusters[cluster_label] = self.sort_locations_by_proximity_to_hub(closest_hub, clusters[cluster_label])
         return clusters
 
     def select_hub_for_cluster(self, cluster):
@@ -59,3 +60,14 @@ class ClusterMaker:
         return hub_info
 
 
+    def sort_locations_by_proximity_to_hub(self, hub, locations):
+        # Compute the distance from each location to the hub
+        location_distances = []
+        for location in locations:
+            distance = np.linalg.norm(np.array([hub['lat'], hub['lon']]) - np.array([location['lat'], location['lon']]))
+            location_distances.append((location, distance))
+
+        # Sort the list of tuples by the distance (ascending order)
+        locations_sorted_by_distance = [loc for loc, dist in sorted(location_distances, key=lambda x: x[1])]
+
+        return locations_sorted_by_distance
