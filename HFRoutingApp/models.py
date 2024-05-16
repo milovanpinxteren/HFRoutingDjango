@@ -20,25 +20,13 @@ class Weekday(models.Model):
         return f'{self.get_day_display()}'
 
 
-class Hub(models.Model):
-    shortcode = models.CharField(max_length=7)
-    description = models.CharField(max_length=80)
-    created_at = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    address = map_fields.AddressField(_('address'), max_length=200, blank=True, null=True)
-    geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
-    notes = models.TextField(_('notes'), blank=True, null=True)
 
-    def __str__(self):
-        return self.shortcode
 
 class Customer(models.Model):
     shortcode = models.CharField(max_length=7)
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    customer_id = models.IntegerField(default=None, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
 
@@ -51,7 +39,6 @@ class Location(models.Model):
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    location_id = models.IntegerField(default=None, blank=True, null=True)
     customer = models.ForeignKey(Customer, models.PROTECT, default=None, limit_choices_to={'active': True},
                                  verbose_name=Customer._meta.verbose_name)
     updated_at = models.DateTimeField(auto_now=True)
@@ -82,10 +69,20 @@ class Machine(models.Model):
         return self.shortcode
 
 
+class Hub(models.Model):
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, default=0)
+    shortcode = models.CharField(max_length=7)
+    description = models.CharField(max_length=80)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(_('notes'), blank=True, null=True)
+
+    def __str__(self):
+        return self.shortcode
+
 class Operator(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    address = models.CharField(_('address'), max_length=200, blank=True, null=True)
-    postal_code = models.CharField(_('postal code'), max_length=20, blank=True, null=True)
+    address = models.CharField(_('address'), max_length=250, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
     max_vehicle_load = models.IntegerField()
     starting_time = models.TimeField()
@@ -154,4 +151,12 @@ class Route(models.Model):
     order = models.CharField(max_length=1000) #array with the stops in driving order
     day = models.DateField()
     hub = models.ForeignKey(Hub, on_delete=models.CASCADE, default=0)
+
+class DistanceMatrix(models.Model):
+    origin = models.ForeignKey(Location, related_name='distances_from', on_delete=models.CASCADE, default=0)
+    destination = models.ForeignKey(Location, related_name='distances_to', on_delete=models.CASCADE, default=0)
+    distance_meters = models.IntegerField(null=True)
+
+
+
 

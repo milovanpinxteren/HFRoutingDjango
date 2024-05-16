@@ -6,29 +6,35 @@
     <link rel="icon" href="{% static 'images/favicon/hf_logo.png' %}" type="image/png">
     <script src="https://unpkg.com/htmx.org@1.4.1"></script>
     <link rel="stylesheet" type="text/css"
-      href="{% static 'stylesheets/routes/routes_desktop.css' %}"/>
+          href="{% static 'stylesheets/routes/routes_desktop.css' %}"/>
     <title>Routes</title>
 </head>
 <body>
 {% include 'components/navbar.html' %}
 <h1>Routes</h1>
-<form hx-get="./show_routes_for_date" hx-target="#response" hx-swap="innerHTML">
-    <label for="date">Zie routes voor dag: </label>
-    <input type="date" name="date" id="date">
-    <button type="submit">Verzenden</button>
-</form>
-<form hx-get="./calculate_routes_for_date" hx-target="#response" hx-swap="innerHTML">
-    <label for="date">Bereken routes voor dag: </label>
-    <input type="date" name="date" id="date">
-    <button type="submit">Bereken</button>
-</form>
-<form hx-get="./make_clusters" hx-target="#response" hx-swap="innerHTML">
-    <label for="no_clusters">Aantal clusters </label>
-    <input type="number" name="no_clusters" id="no_clusters">
-    <button type="submit">Bereken</button>
-</form>
-<a href="{% url 'make_base_routes' %}">Maak Basis routes</a>
-<div id="response">
+<div class="body-container">
+    <div class="left-container">
+        <form hx-get="./show_routes_for_date" hx-target="#response" hx-swap="innerHTML">
+            <label for="date">Zie routes voor dag: </label>
+            <input type="date" name="date" id="date">
+            <button type="submit">Verzenden</button>
+        </form>
+        <form hx-get="./calculate_routes_for_date" hx-target="#response" hx-swap="innerHTML">
+            <label for="date">Bereken routes voor dag: </label>
+            <input type="date" name="date" id="date">
+            <button type="submit">Bereken</button>
+        </form>
+        <form hx-get="./make_clusters" hx-target="#response" hx-swap="innerHTML">
+            <label for="no_clusters">Aantal clusters </label>
+            <input type="number" name="no_clusters" id="no_clusters">
+            <button type="submit">Bereken</button>
+        </form>
+        <a href="{% url 'make_base_routes' %}">Maak Basis routes</a>
+    </div>
+    <div class="right-container">
+        <div id="response">
+        </div>
+    </div>
 </div>
 </body>
 </html>

@@ -15,9 +15,10 @@ def show_map(request):
     customer_locations = []
     operator_locations = []
     for hub in hubs:
-        if hub.geolocation:
+        if hub.location.geolocation:
             hub_locations.append(
-                {'name': hub.shortcode, 'address': hub.address, 'lat': hub.geolocation.lat, 'lon': hub.geolocation.lon})
+                {'name': hub.shortcode, 'address': hub.location.address, 'lat': hub.location.geolocation.lat,
+                 'lon': hub.location.geolocation.lon})
     for location in locations:
         if location.geolocation:
             customer_locations.append(

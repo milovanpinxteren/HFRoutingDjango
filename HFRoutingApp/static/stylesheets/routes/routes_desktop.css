@@ -1,9 +1,27 @@
 .route-response {
-    max-width: 40%;
+    max-width: 15%;
     float: left;
 }
 
 .map-div {
-    min-width: 60%;
+    width: 85%;
     float: right;
+}
+
+.body-container {
+    display: flex;
+    height: 100%;
+    grid-template-columns: 1fr 1fr;
+}
+
+.left-container {
+    padding: 1px;
+    width: 30%;
+    min-height: 470px;
+}
+
+.right-container {
+    padding: 1px;
+    width: 70%;
+    min-height: 470px;
 }

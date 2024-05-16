@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checks</title>
+</head>
+<body>
+{% include 'components/navbar.html' %}
+<form hx-get="./check_distance_matrix" hx-target="#response" hx-swap="innerHTML">
+    <label for="date">Controleer distance matrix </label>
+    <button type="submit">Controleer</button>
+</form>
+<div id="response"></div>
+</body>
+</html>

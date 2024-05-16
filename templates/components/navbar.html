@@ -1,6 +1,8 @@
 {% load static %}
 <link rel="stylesheet" type="text/css"
       href="{% static 'stylesheets/components/navbar.css' %}"/>
+    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
+
 <nav class="navbar">
     <div class="container">
         <a href="#" class="logo"><img src="https://healthyfridge.nl/wp-content/uploads/2020/02/HF-Logo-website-def.png"
@@ -14,6 +16,9 @@
             {% elif user.groups.all.0.name == "operator" %}
                 <li><a href="#">Mijn routes</a></li>
                 <li><a href="#">Checklists</a></li>
+            {% endif %}
+            {% if user.is_superuser %}
+            <li><a href="{% url 'show_checks_page' %}">Checks</a></li>
             {% endif %}
             <li>
                 <form method="POST" action="{% url 'logout' %}">

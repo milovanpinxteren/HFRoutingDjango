@@ -9,7 +9,7 @@ from scipy.spatial import distance_matrix
 class ClusterMaker:
     def make_clusters(self, no_clusters):
         locations = Location.objects.filter(active=True)
-        self.hubs = Hub.objects.filter(active=True)
+        self.hubs = Hub.objects.filter(location__active=True).select_related('location')
 
         customer_locations = []
         for location in locations:
@@ -47,18 +47,18 @@ class ClusterMaker:
         cluster_center = [np.mean([point[i] for point in cluster_points]) for i in range(2)]
         closest_hub, min_distance = None, float('inf')
         for hub in self.hubs:
-            distance = np.linalg.norm(np.array(cluster_center) - np.array([hub.geolocation.lat, hub.geolocation.lon]))
+            distance = np.linalg.norm(
+                np.array(cluster_center) - np.array([hub.location.geolocation.lat, hub.location.geolocation.lon]))
             if distance < min_distance:
                 closest_hub = hub
                 min_distance = distance
         hub_info = {
-                'name': closest_hub.shortcode,
-                'address': closest_hub.address,
-                'lat': closest_hub.geolocation.lat,
-                'lon': closest_hub.geolocation.lon
+            'name': closest_hub.shortcode,
+            'address': closest_hub.location.address,
+            'lat': closest_hub.location.geolocation.lat,
+            'lon': closest_hub.location.geolocation.lon
         }
         return hub_info
-
 
     def sort_locations_by_proximity_to_hub(self, hub, locations):
         # Compute the distance from each location to the hub
