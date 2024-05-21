@@ -1,6 +1,6 @@
 
 """
-Takes a few locations in Distance matrix, calculates distance with google maps, checks with original and reports
+Takes 50 locations in Distance matrix, calculates distance with google maps, checks with original and reports
 """
 from HFRoutingApp.models import DistanceMatrix
 import random

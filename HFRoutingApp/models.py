@@ -82,8 +82,7 @@ class Hub(models.Model):
 
 class Operator(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    address = models.CharField(_('address'), max_length=250, blank=True, null=True)
-    geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, default=0)
     max_vehicle_load = models.IntegerField()
     starting_time = models.TimeField()
     active = models.BooleanField(default=True)

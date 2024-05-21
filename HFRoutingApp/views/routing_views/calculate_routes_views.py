@@ -2,9 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from HFRoutingApp.classes.map_maker import MapMaker
-from HFRoutingApp.classes.routingclasses.base_route_maker import BaseRouteMaker
+from HFRoutingApp.classes.routingclasses.base_route_maker.base_route_maker import BaseRouteMaker
 from HFRoutingApp.classes.routingclasses.cluster_maker import ClusterMaker
-from HFRoutingApp.classes.routingclasses.penalty_calculator import PenaltyCalculator
 from HFRoutingApp.classes.routingclasses.stop_getter import StopGetter
 
 
@@ -35,4 +34,4 @@ def make_base_routes(request):
     base_route_maker = BaseRouteMaker()
     base_route_maker.make_base_routes()
     context = {'routes': False}
-    return render(request, 'map/map.html', context)
+    return render(request, 'routes/routes_overview.html', context)

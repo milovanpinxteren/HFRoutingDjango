@@ -25,10 +25,10 @@ def show_map(request):
                 {'name': location.shortcode, 'address': location.address, 'lat': location.geolocation.lat,
                  'lon': location.geolocation.lon})
     for operator in operators:
-        if operator.geolocation:
+        if operator.location.geolocation:
             operator_locations.append(
-                {'name': operator.user.username, 'address': operator.address, 'lat': operator.geolocation.lat,
-                 'lon': operator.geolocation.lon})
+                {'name': operator.user.username, 'address': operator.location.address, 'lat': operator.location.geolocation.lat,
+                 'lon': operator.location.geolocation.lon})
     map_dict = {'hubs': hub_locations,
                 'customers': customer_locations,
                 'operators': operator_locations}
