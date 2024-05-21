@@ -1,7 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'images/favicon/hf_logo.png' %}" type="image/png">
+    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
     <title>Checks</title>
 </head>
 <body>
@@ -10,6 +13,20 @@
     <label for="date">Controleer distance matrix </label>
     <button type="submit">Controleer</button>
 </form>
-<div id="response"></div>
+<div id="response">
+    {% if response %}
+        <ul>
+            {% for key, value in response.items %}
+                <li>{{ key }}asdf
+                    <ul>
+                        {% for inner_key, inner_value in value.items %}
+                            <li>{{ inner_key }}asdfasdfe: {{ inner_value }}SAASDF</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
 </body>
 </html>

@@ -23,7 +23,6 @@ def calculate_routes_for_date(request):
 
 @login_required
 def calculate_clusters(request):
-    #TODO: Make clusters via Google API, store in database
     cluster_maker = ClusterMaker()
     map_maker = MapMaker()
     no_clusters = int(request.GET.get('no_clusters', 6))

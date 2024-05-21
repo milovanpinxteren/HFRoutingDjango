@@ -1,0 +1,13 @@
+    {% if response %}
+        <ul>
+            {% for key, value in response.items %}
+                <li>
+                    <ul>
+                        {% for inner_key, inner_value in value.items %}
+                            <li>{{ inner_key }}: {{ inner_value }} meter verschil</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
