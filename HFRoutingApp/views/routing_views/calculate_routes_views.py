@@ -2,16 +2,16 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from HFRoutingApp.classes.map_maker import MapMaker
-from HFRoutingApp.classes.routingclasses.base_route_maker.base_route_maker import BaseRouteMaker
+from HFRoutingApp.classes.routingclasses.base_route_maker.mandatory_route_maker import MandatoryRouteMaker
+from HFRoutingApp.classes.routingclasses.base_route_maker.route_extender import RouteExtender
 from HFRoutingApp.classes.routingclasses.cluster_maker import ClusterMaker
-from HFRoutingApp.classes.routingclasses.stop_getter import StopGetter
+from HFRoutingApp.classes.routingclasses.helpers.stop_getter import StopGetter
 
 
 
 @login_required
 def calculate_routes_for_date(request):
     stop_getter = StopGetter()
-    # penalty_calculator = PenaltyCalculator()
     date = request.GET.get('date', None)
     stops = stop_getter.get_stops_on_date(date)
 
@@ -30,8 +30,14 @@ def calculate_clusters(request):
     response = {'routes': True,'map': clusters_map._repr_html_()}
     return render(request, 'routes/routes_overview.html', response)
 
+@login_required
 def make_base_routes(request):
-    base_route_maker = BaseRouteMaker()
-    base_route_maker.make_base_routes()
-    context = {'routes': False}
+    mandatory_route_maker = MandatoryRouteMaker()
+    route_extender = RouteExtender()
+    map_maker = MapMaker()
+    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes()
+    extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
+    routes_map = map_maker.make_map(extended_routes, 'routes')
+
+    context = {'routes': True, 'map': routes_map._repr_html_()}
     return render(request, 'routes/routes_overview.html', context)

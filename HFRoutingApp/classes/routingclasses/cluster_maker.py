@@ -1,9 +1,6 @@
 from HFRoutingApp.models import Location, Hub
 from sklearn.cluster import KMeans
-from collections import defaultdict
-import random
 import numpy as np
-from scipy.spatial import distance_matrix
 
 
 class ClusterMaker:
@@ -67,7 +64,6 @@ class ClusterMaker:
             distance = np.linalg.norm(np.array([hub['lat'], hub['lon']]) - np.array([location['lat'], location['lon']]))
             location_distances.append((location, distance))
 
-        # Sort the list of tuples by the distance (ascending order)
         locations_sorted_by_distance = [loc for loc, dist in sorted(location_distances, key=lambda x: x[1])]
 
         return locations_sorted_by_distance

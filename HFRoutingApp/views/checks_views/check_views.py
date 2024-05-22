@@ -1,8 +1,7 @@
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from HFRoutingApp.classes.routingclasses.distance_calculators.distance_matrix_checker import DistanceMatrixChecker
+from HFRoutingApp.classes.routingclasses.helpers.distance_calculators.distance_matrix_checker import DistanceMatrixChecker
 
 
 @login_required

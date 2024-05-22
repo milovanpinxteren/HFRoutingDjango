@@ -4,7 +4,9 @@ Views for updating data for routing. E.G. Distance matrix, geolocations, etc
 """
 from django.http import HttpResponse
 
-from HFRoutingApp.classes.routingclasses.distance_calculators.distance_matrix_updater import DistanceMatrixUpdater
+from HFRoutingApp.classes.routingclasses.helpers.distance_calculators.distance_matrix_updater import \
+    DistanceMatrixUpdater
+
 
 
 def update_distance_matrix(request):

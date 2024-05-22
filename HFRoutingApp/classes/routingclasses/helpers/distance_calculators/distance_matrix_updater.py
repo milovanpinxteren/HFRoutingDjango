@@ -42,6 +42,7 @@ class DistanceMatrixUpdater:
                     location_distance_dict[destination_id] = distance
             all_distances_dict[origin_location_id] = location_distance_dict
         self.save_distances(all_distances_dict)
+        return 'Distance Matrix Updated'
 
 
 

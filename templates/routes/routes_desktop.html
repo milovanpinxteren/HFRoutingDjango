@@ -27,9 +27,15 @@
         <form hx-get="./make_clusters" hx-target="#response" hx-swap="innerHTML">
             <label for="no_clusters">Aantal clusters </label>
             <input type="number" name="no_clusters" id="no_clusters">
-            <button type="submit">Bereken</button>
+            <button type="submit">Genereer</button>
         </form>
-        <a href="{% url 'make_base_routes' %}">Maak Basis routes</a>
+        <button
+                hx-get="./make_base_routes"
+                hx-target="#response"
+                hx-swap="innerHTML">
+            Maak Basis routes
+        </button>
+
     </div>
     <div class="right-container">
         <div id="response">

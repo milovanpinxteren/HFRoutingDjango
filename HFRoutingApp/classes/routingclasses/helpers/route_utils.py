@@ -32,3 +32,9 @@ class RouteUtils:
             spot_ids = OperatorLocationLink.objects.filter(operator=operator).values_list('location__spot', flat=True)
             mandatory_groups[operator.id] = spot_ids
         return mandatory_groups
+
+    def get_vehicle_capacities(self, operators):
+        capacity_dict = {}
+        for operator in operators:
+            capacity_dict[operator.id] = operator.max_vehicle_load
+        return capacity_dict

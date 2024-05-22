@@ -11,10 +11,7 @@
 </head>
 <body>
 {% include 'components/navbar.html' %}
-<form hx-get="./update_distance_matrix" hx-target="#response" hx-swap="innerHTML">
-    <label for="date">Bereken afstanden tussen locaties (updaten na toevoegen/aanpassen van locatie) </label>
-    <button type="submit">Bereken</button>
-</form>
+
 <div id="response"></div>
 <div class="map-container">
     {{ map|safe }}

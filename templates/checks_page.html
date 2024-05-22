@@ -13,6 +13,10 @@
     <label for="date">Controleer distance matrix </label>
     <button type="submit">Controleer</button>
 </form>
+<form hx-get="./update_distance_matrix" hx-target="#response" hx-swap="innerHTML">
+    <label for="date">Bereken afstanden tussen locaties (updaten na toevoegen/aanpassen van locatie) </label>
+    <button type="submit">Bereken</button>
+</form>
 <div id="response">
     {% if response %}
         <ul>
