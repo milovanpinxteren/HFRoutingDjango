@@ -42,7 +42,7 @@ class MapMaker:
             position: fixed; 
             bottom: 13px;
             right: 0;
-            width: 170px;
+            width: 250px;
             height: {height}px; 
             border:1px solid grey;
             background: whitesmoke; 

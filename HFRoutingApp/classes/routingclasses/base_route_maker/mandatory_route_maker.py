@@ -45,5 +45,5 @@ class MandatoryRouteMaker:
                 current_location = closest_spot
 
         route.append(closest_hub)
-        route.append(current_location)
+        route.append(operator.location)
         return route

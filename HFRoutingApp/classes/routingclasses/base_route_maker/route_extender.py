@@ -1,18 +1,24 @@
 from queue import PriorityQueue
 
+from HFRoutingApp.classes.routingclasses.helpers.calculate_cost_per_route import CalculateCostPerRoute
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
+from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm import GeneticAlgorithm
 from HFRoutingApp.models import Operator
 
 
 class RouteExtender:
     def __init__(self):
         self.route_utils = RouteUtils()
+        self.cost_calculator = CalculateCostPerRoute()
+        self.genetic_algorithm = GeneticAlgorithm()
 
     def extend_route(self, routes, remaining_spots, operators):
         queues = self.create_queues(operators, remaining_spots)
         capacities = self.route_utils.get_vehicle_capacities(operators)
         routes = self.insert_spots(queues, routes, capacities)
-        prepared_routes = self.prepare_routes_for_map(routes)
+        optimized_routes = self.genetic_algorithm.do_evolution(routes)
+        costs = self.cost_calculator.calculate_cost_per_route(routes)
+        prepared_routes = self.prepare_routes_for_map(routes, costs)
         return prepared_routes
 
     def create_queues(self, operators, remaining_spots):
@@ -64,10 +70,10 @@ class RouteExtender:
             for queue_tuple in queue_elements_buffer:
                 queue.put(queue_tuple)
 
-    def prepare_routes_for_map(self, routes):
+    def prepare_routes_for_map(self, routes, costs):
         operators = Operator.objects.all()
-        operator_id_to_name = {operator.id: f"{operator.user.first_name} {operator.user.last_name}" for operator in
-                               operators}
+        operator_id_to_name = {operator.id: (f"{operator.user.first_name} {operator.user.last_name},"
+                                             f" km: {float(costs[operator.id] / 1000)}") for operator in operators}
         new_dict = {}
         for operator_id, route in routes.items():
             spots_on_route = []

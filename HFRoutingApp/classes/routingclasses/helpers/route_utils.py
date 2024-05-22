@@ -6,11 +6,23 @@ from HFRoutingApp.models import DistanceMatrix, OperatorLocationLink
 class RouteUtils:
     def get_distance(self, origin, destination):
         try:
-            distance_entry = DistanceMatrix.objects.get(Q(origin=origin) & Q(destination=destination))
-            return distance_entry.distance_meters
+            if hasattr(origin, 'location'):
+                origin = origin.location
+            if hasattr(destination, 'location'):
+                destination = destination.location
+            distance = DistanceMatrix.objects.get(Q(origin=origin) & Q(destination=destination)).distance_meters
         except DistanceMatrix.DoesNotExist:
-            return float('inf')
+            distance = float('inf')
+        return distance
 
+    def get_distance_matrix(self):
+        distance_matrix = {}
+        distances = DistanceMatrix.objects.all()
+        for distance in distances:
+            key = (distance.origin.id, distance.destination.id)
+            value = distance.distance_meters
+            distance_matrix[key] = value
+        return distance_matrix
     def get_nearest_location(self, current_location, locations):
         nearest_location = None
         shortest_distance = float('inf')
@@ -24,7 +36,6 @@ class RouteUtils:
     def get_mandatory_groups(self, operators):
         """
         Gets the locations linked to an operator, these locations have to be in the same route (because same operator)
-        Functions as a starting point for parallel insertion
         :return: dict with operator id as key and [location_ids] as value
         """
         mandatory_groups = {}
