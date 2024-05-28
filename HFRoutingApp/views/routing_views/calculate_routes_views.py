@@ -32,6 +32,7 @@ def calculate_clusters(request):
 
 @login_required
 def make_base_routes(request):
+    print('Make base routes')
     mandatory_route_maker = MandatoryRouteMaker()
     route_extender = RouteExtender()
     map_maker = MapMaker()

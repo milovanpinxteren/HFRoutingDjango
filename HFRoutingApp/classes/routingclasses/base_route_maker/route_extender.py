@@ -15,10 +15,12 @@ class RouteExtender:
     def extend_route(self, routes, remaining_spots, operators):
         queues = self.create_queues(operators, remaining_spots)
         capacities = self.route_utils.get_vehicle_capacities(operators)
+        print('inserting spots')
         routes = self.insert_spots(queues, routes, capacities)
+        print('to genetic algorithm')
         optimized_routes = self.genetic_algorithm.do_evolution(routes)
-        costs = self.cost_calculator.calculate_cost_per_route(routes)
-        prepared_routes = self.prepare_routes_for_map(routes, costs)
+        costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
+        prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
         return prepared_routes
 
     def create_queues(self, operators, remaining_spots):
