@@ -8,7 +8,6 @@ from HFRoutingApp.classes.routingclasses.cluster_maker import ClusterMaker
 from HFRoutingApp.classes.routingclasses.helpers.stop_getter import StopGetter
 
 
-
 @login_required
 def calculate_routes_for_date(request):
     stop_getter = StopGetter()
@@ -32,10 +31,11 @@ def calculate_clusters(request):
 
 @login_required
 def make_base_routes(request):
-    print('Make base routes')
+    print('Make base routes triggered')
     mandatory_route_maker = MandatoryRouteMaker()
     route_extender = RouteExtender()
     map_maker = MapMaker()
+
     routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes()
     extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
     routes_map = map_maker.make_map(extended_routes, 'routes')

@@ -32,12 +32,3 @@ class CalculateRoutesTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['stops'], 6)
 
-        # DAYS_OF_WEEK = [
-        #     (0, 'Maandag'),
-        #     (1, 'Dinsdag'),
-        #     (2, 'Woensdag'),
-        #     (3, 'Donderdag'),
-        #     (4, 'Vrijdag'),
-        #     (5, 'Zaterdag'),
-        #     (6, 'Zondag'),
-        # ]

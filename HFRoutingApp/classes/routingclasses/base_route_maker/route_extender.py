@@ -2,7 +2,7 @@ from queue import PriorityQueue
 
 from HFRoutingApp.classes.routingclasses.helpers.calculate_cost_per_route import CalculateCostPerRoute
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
-from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm import GeneticAlgorithm
+from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.genetic_algorithm import GeneticAlgorithm
 from HFRoutingApp.models import Operator
 
 
@@ -15,9 +15,7 @@ class RouteExtender:
     def extend_route(self, routes, remaining_spots, operators):
         queues = self.create_queues(operators, remaining_spots)
         capacities = self.route_utils.get_vehicle_capacities(operators)
-        print('inserting spots')
         routes = self.insert_spots(queues, routes, capacities)
-        print('to genetic algorithm')
         optimized_routes = self.genetic_algorithm.do_evolution(routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
@@ -37,7 +35,6 @@ class RouteExtender:
         return queues
 
     def calculate_cost(self, spot, operator):
-        # TODO: maybe extend with distance from hub to location?
         distance = self.route_utils.get_distance(spot.location, operator.location)
         return distance
 
@@ -50,7 +47,7 @@ class RouteExtender:
                 if not queue.empty() and capacities[operator.id] > 0:
                     cost, _, spot = queue.get()
                     if capacities[operator.id] > spot.avg_no_crates:
-                        routes[operator.id].append(spot)
+                        routes[operator.id] = routes[operator.id][:-2] + [spot] + routes[operator.id][-2:]
                         capacities[operator.id] -= spot.avg_no_crates
                         self.remove_spot_from_all_queues(queues, spot)
                         operators_tried = 0
