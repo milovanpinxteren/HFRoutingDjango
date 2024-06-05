@@ -12,8 +12,8 @@ class GeneticAlgorithm:
     def __init__(self):
         self.route_utils = RouteUtils()
         self.population_size = 50
-        self.generations = 120
-        self.mutation_rate = 0.00
+        self.generations = 50
+        self.mutation_rate = 0.25
         self.distance_matrix = self.route_utils.get_distance_matrix()
         self.ga_helpers = GeneticAlgorithmHelpers()
         print('distance matrix got')
@@ -82,13 +82,14 @@ class GeneticAlgorithm:
 
         return child1, child2
 
-
     def evolve(self):
         new_population = []
         while len(new_population) < self.population_size:
             parent1, parent2 = self.selection()
             child1, child2 = self.crossover(parent1, parent2)
-            # child = self.ga_helpers.mutate(child, self.mutation_rate)
+            if random.random() < self.mutation_rate:
+                child1 = self.ga_helpers.mutate(child1)
+                child2 = self.ga_helpers.mutate(child2)
             new_population.extend([child1, child2])
         self.population = new_population
 
@@ -96,6 +97,11 @@ class GeneticAlgorithm:
         transformed_routes = {vehicle: [getattr(loc, 'location', loc).id for loc in locations] for vehicle, locations in
                               routes.items()}
         print('original')
+        original_len = 0
+        for operator, route in transformed_routes.items():
+            print('route for ', operator, 'is length: ', len(route))
+            original_len += len(route)
+        print(original_len)
         print(transformed_routes)
         self.population = self.ga_helpers.initialize_population(transformed_routes, self.population_size)
 

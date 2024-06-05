@@ -14,16 +14,12 @@ class GeneticAlgorithmHelpers:
             population.append(chromosome)
         return population
 
-    def mutate(self, chromosome, mutation_rate):
-        for vehicle in chromosome:
-            if random.random() < mutation_rate:
-                idx1, idx2 = random.sample(range(len(chromosome[vehicle])), 2)
-                chromosome[vehicle][idx1], chromosome[vehicle][idx2] = chromosome[vehicle][idx2], chromosome[vehicle][
-                    idx1]
-        return chromosome
+    def mutate(self, child):
+        driver1 = random.choice(list(child.keys()))
+        stop1_index = random.randint(2, len(child[driver1]) - 3)
+        stop = child[driver1].pop(stop1_index)
 
-    def preserve_ends(self, route):
-        return route[:2], route[-2:]
-
-    def get_middle_segment(self, route):
-        return route[2:-2]
+        driver2 = random.choice(list(child.keys()))
+        stop2_index = random.randint(2, len(child[driver2]) - 3)
+        child[driver2].insert(stop2_index, stop)
+        return child
