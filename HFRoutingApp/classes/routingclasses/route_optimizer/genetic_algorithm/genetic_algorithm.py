@@ -11,9 +11,11 @@ import timeit
 class GeneticAlgorithm:
     def __init__(self):
         self.route_utils = RouteUtils()
-        self.population_size = 50
-        self.generations = 50
-        self.mutation_rate = 0.25
+        self.population_size = 100
+        self.generations = 1
+        self.mutation_rate = 0.01
+        self.elitism_count = 5
+        self.tournament_size = 3
         self.distance_matrix = self.route_utils.get_distance_matrix()
         self.ga_helpers = GeneticAlgorithmHelpers()
         print('distance matrix got')
@@ -43,9 +45,23 @@ class GeneticAlgorithm:
             print(e)
             return float("-inf")
 
+    def tournament_selection(self):
+        selected = []
+        for _ in range(2):  # Select two parents
+            tournament = random.sample(self.ranked_population, self.tournament_size)
+            parent = min(tournament, key=self.fitness)
+            selected.append(parent)
+        return selected[0], selected[1]
+
     def selection(self):
-        ranked_population = sorted(self.population, key=self.fitness)
-        return ranked_population[0], ranked_population[1]
+        # ranked_population = sorted(self.population, key=self.fitness, reverse=True)
+        #
+        # total_ranks = sum(range(1, len(ranked_population) + 1))
+        # selection_probabilities = [(i + 1) / total_ranks for i in range(len(ranked_population))]
+        # parent1 = random.choices(self.ranked_population[self.elitism_count:], weights=self.selection_probabilities, k=1)[0]
+        # parent2 = random.choices(self.ranked_population[self.elitism_count:], weights=self.selection_probabilities, k=1)[0]
+        # return parent1, parent2
+        return self.ranked_population[0], self.ranked_population[1]
         # return ranked_population[:self.population_size // 2]
 
     def crossover(self, parent1, parent2):
@@ -83,9 +99,15 @@ class GeneticAlgorithm:
         return child1, child2
 
     def evolve(self):
+        self.ranked_population = sorted(self.population, key=self.fitness)
+        self.elites = self.ranked_population[:self.elitism_count]
+        self.total_ranks = sum(range(1, len(self.ranked_population) - self.elitism_count + 1))
+        self.selection_probabilities = [(i + 1) / self.total_ranks for i in range(len(self.ranked_population) - self.elitism_count)]
         new_population = []
+        new_population.extend(self.elites)
         while len(new_population) < self.population_size:
-            parent1, parent2 = self.selection()
+            # parent1, parent2 = self.selection()
+            parent1, parent2 = self.tournament_selection()
             child1, child2 = self.crossover(parent1, parent2)
             if random.random() < self.mutation_rate:
                 child1 = self.ga_helpers.mutate(child1)
