@@ -5,14 +5,25 @@
 #     selected_parents = random.choices(self.population, weights=probabilities, k=self.population_size // 2)
 #     return selected_parents
 
-
-# def crossover(self, parent1, parent2):  # With midpoint crossover
-#     child = {}
-#     for vehicle in parent1:
-#         midpoint = len(parent1[vehicle]) // 2
-#         child[vehicle] = parent1[vehicle][:midpoint] + [gene for gene in parent2[vehicle] if
-#                                                         gene not in parent1[vehicle][:midpoint]]
-#     return child
+# def fitness(self, chromosome):
+#     try:
+#         total_distance = 0
+#         for vehicle, route in chromosome.items():
+#             total_load = 0
+#             route_distance = 0
+#             for i in range(len(route)):
+#                 if i < len(route) - 1:
+#                     try:
+#                         spot_id = self.location_to_spot[route[i]]
+#                         total_load += self.spot_crates[spot_id]
+#                     except KeyError:  # spot not found -> error or it is a driver
+#                         total_load += 0
+#                     route_distance += self.distance_matrix[(route[i], route[i + 1])]
+#             total_distance += route_distance
+#         return total_distance
+#     except Exception as e:
+#         print(e)
+#         return float("-inf")
 
 # def crossover(self, parent1, parent2):  # With uniform crossover
 #     child = {}
@@ -65,6 +76,43 @@
 #             child_locations = parent1[vehicle]
 #         child[vehicle] = child_locations
 #     return child
+
+
+# def crossover(self, parent1, parent2):
+#     try:
+#         child = parent1.copy() #Copy parent, will be the child
+#         vehicle = random.choice(list(parent1.keys())) #Get a random route from parent1
+#         remaining_locations_parent1 = parent1[vehicle][2:-2] #Get the (non-preserved) locations of route
+#         child_locations_to_insert = remaining_locations_parent1.copy()
+#         random_parent1_index = random.randint(1, len(remaining_locations_parent1) - 1) #Get a random index
+#         old_value = remaining_locations_parent1[random_parent1_index] #The value of the random stop
+#
+#         remaining_locations_parent2 = parent2[random.choice(list(parent2.keys()))][2:-2] #Get random loc from par2
+#         random_parent2_index = random.randint(1, len(remaining_locations_parent2) - 1) #Get index
+#         new_value = remaining_locations_parent2[random_parent2_index] #New random value
+#         print('OLD', vehicle, 'locs:', remaining_locations_parent1)
+#         if new_value not in child_locations_to_insert:
+#             child_locations_to_insert[random_parent1_index] = new_value #Replace old value with new
+#             for key, value_list in child.items():  # Replace occurence of new value in child with old
+#                 if new_value in value_list:
+#                     value_list[value_list.index(new_value)] = old_value
+#                     print('NEW', vehicle, 'locs:', child_locations_to_insert)
+#                     child_locations = child[vehicle][:2] + child_locations_to_insert + child[vehicle][-2:]
+#                     child[vehicle] = child_locations
+#                     if child:
+#                         return child
+#                     else:
+#                         print('Child', child)
+#         else:
+#             print('ALREADY IN ROUTE')
+#             return parent1
+#     except Exception as e:
+#         print(e)
+#         return parent1
+
+
+
+
 
 
 ###GPT

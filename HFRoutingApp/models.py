@@ -122,8 +122,6 @@ class Spot(models.Model):
                                             null=True)  # 0-1 used for cluster making and manual override
     notes = models.TextField(_('notes'), blank=True, null=True)
 
-
-
     def __str__(self):
         return self.shortcode
 

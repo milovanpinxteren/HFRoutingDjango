@@ -58,3 +58,25 @@ To whitelist your IP address for Google Maps API, follow these steps:
 Ensure you have a .env file set up with the necessary environment variables. Example:
 
 `GOOGLE_MAPS_API_KEY=your_api_key`
+
+
+#### Database
+Each Operator, hub, spot should have exactly one Location.
+
+If multiple spots on 1 physical location, make more locations
+
+> E.g.:  HospitalA has 3 machines on floor1, floor2 and floor3
+> - Make 3 machines
+> - Make 3 spots and add each machine to each spot
+> - Make 3 locations (HospitalA_floor1, HospitalA_floor2, etc)
+> - Assign each spot to each location
+
+
+> When adding a driver/operator
+> - Add a location of the driver's home adress
+> - Make a user for the driver
+> - Make a driver, and assign the user and location to driver
+
+> When adding a hub
+> - Add a location of the Hub's location
+> - Make the hub and assign the location to it
