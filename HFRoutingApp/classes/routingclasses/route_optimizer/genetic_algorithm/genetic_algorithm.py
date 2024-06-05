@@ -12,7 +12,7 @@ class GeneticAlgorithm:
     def __init__(self):
         self.route_utils = RouteUtils()
         self.population_size = 50
-        self.generations = 150
+        self.generations = 120
         self.mutation_rate = 0.00
         self.distance_matrix = self.route_utils.get_distance_matrix()
         self.ga_helpers = GeneticAlgorithmHelpers()
@@ -32,6 +32,8 @@ class GeneticAlgorithm:
                         try:
                             spot_id = self.location_to_spot[route[i]]
                             total_load += self.spot_crates[spot_id]
+                            # if total_load > self.vehicle_capacity[vehicle]:
+                            #     total_distance += float("inf")
                         except KeyError:  # spot not found -> error or it is a driver
                             total_load += 0
                         route_distance += self.distance_matrix[(route[i], route[i + 1])]
@@ -43,7 +45,8 @@ class GeneticAlgorithm:
 
     def selection(self):
         ranked_population = sorted(self.population, key=self.fitness)
-        return ranked_population[:self.population_size // 2]
+        return ranked_population[0], ranked_population[1]
+        # return ranked_population[:self.population_size // 2]
 
     def crossover(self, parent1, parent2):
         child1 = {k: v[:] for k, v in parent1.items()}
@@ -65,17 +68,25 @@ class GeneticAlgorithm:
             if stop1 in value_list:
                 child2[key][value_list.index(stop1)] = stop2
 
-        child1[driver1][stop1_index] = stop2
-        child2[driver2][stop2_index] = stop1
+        if stop2 not in child1[driver1]:
+            child1[driver1][stop1_index] = stop2
+
+        else:
+            print('stop already present')
+            child1[driver1][stop1_index] = stop1
+        if stop1 not in child2[driver2]:
+            child2[driver2][stop2_index] = stop1
+        else:
+            print('stop already present')
+            child2[driver2][stop2_index] = stop2
 
         return child1, child2
 
 
     def evolve(self):
         new_population = []
-        selected = self.selection()
         while len(new_population) < self.population_size:
-            parent1, parent2 = random.sample(selected, 2)
+            parent1, parent2 = self.selection()
             child1, child2 = self.crossover(parent1, parent2)
             # child = self.ga_helpers.mutate(child, self.mutation_rate)
             new_population.extend([child1, child2])
@@ -84,7 +95,8 @@ class GeneticAlgorithm:
     def do_evolution(self, routes):
         transformed_routes = {vehicle: [getattr(loc, 'location', loc).id for loc in locations] for vehicle, locations in
                               routes.items()}
-        print('transformed', transformed_routes)
+        print('original')
+        print(transformed_routes)
         self.population = self.ga_helpers.initialize_population(transformed_routes, self.population_size)
 
         for generation in range(self.generations):
