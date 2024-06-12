@@ -1,8 +1,9 @@
 import random
 
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
+from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.fitness_evaluator import FitnessEvaluator
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.helpers import GeneticAlgorithmHelpers
-from HFRoutingApp.models import Spot, Operator, Location
+from HFRoutingApp.models import Spot, Operator, Location, OperatorLocationLink
 from collections import Counter
 import numpy as np
 import timeit
@@ -10,46 +11,27 @@ import timeit
 
 class GeneticAlgorithm:
     def __init__(self):
-        self.route_utils = RouteUtils()
-        self.population_size = 100
-        self.generations = 1
-        self.mutation_rate = 0.01
-        self.elitism_count = 5
-        self.tournament_size = 3
-        self.distance_matrix = self.route_utils.get_distance_matrix()
-        self.ga_helpers = GeneticAlgorithmHelpers()
-        print('distance matrix got')
         self.spot_crates = {spot.id: spot.avg_no_crates for spot in Spot.objects.all()}
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
         self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
-
-    def fitness(self, chromosome):
-        try:
-            total_distance = 0
-            for vehicle, route in chromosome.items():
-                total_load = 0
-                route_distance = 0
-                for i in range(len(route)):
-                    if i < len(route) - 1:
-                        try:
-                            spot_id = self.location_to_spot[route[i]]
-                            total_load += self.spot_crates[spot_id]
-                            # if total_load > self.vehicle_capacity[vehicle]:
-                            #     total_distance += float("inf")
-                        except KeyError:  # spot not found -> error or it is a driver
-                            total_load += 0
-                        route_distance += self.distance_matrix[(route[i], route[i + 1])]
-                total_distance += route_distance
-            return total_distance
-        except Exception as e:
-            print(e)
-            return float("-inf")
+        self.population_size = 100
+        self.generations = 50
+        self.mutation_rate = 0.01
+        self.elitism_count = 5
+        self.tournament_size = 3
+        self.route_utils = RouteUtils()
+        self.operator_location_links = OperatorLocationLink.objects.all()
+        self.unchangeable_spots = [link.location.id for link in self.operator_location_links]
+        self.distance_matrix = self.route_utils.get_distance_matrix()
+        self.ga_helpers = GeneticAlgorithmHelpers()
+        self.fitness_evaluator = FitnessEvaluator(self.location_to_spot, self.spot_crates, self.distance_matrix,
+                                                  self.vehicle_capacity)
 
     def tournament_selection(self):
         selected = []
         for _ in range(2):  # Select two parents
             tournament = random.sample(self.ranked_population, self.tournament_size)
-            parent = min(tournament, key=self.fitness)
+            parent = min(tournament, key=self.fitness_evaluator.fitness)
             selected.append(parent)
         return selected[0], selected[1]
 
@@ -68,13 +50,32 @@ class GeneticAlgorithm:
         child1 = {k: v[:] for k, v in parent1.items()}
         child2 = {k: v[:] for k, v in parent2.items()}
 
-        driver1 = random.choice(list(parent1.keys()))
-        stop1_index = random.randint(2, len(parent1[driver1]) - 3)
-        stop1 = parent1[driver1][stop1_index]
+        stop1_changeable = False
+        locations_tried_counter1 = 0
+        while not stop1_changeable and locations_tried_counter1 < len(self.location_to_spot):
+            driver1 = random.choice(list(parent1.keys()))
+            stop1_index = random.randint(2, len(parent1[driver1]) - 3)
+            stop1 = parent1[driver1][stop1_index]
+            if stop1 not in self.unchangeable_spots:
+                stop1_changeable = True
+            else:
+                locations_tried_counter1 += 1
 
-        driver2 = random.choice(list(parent2.keys()))
-        stop2_index = random.randint(2, len(parent2[driver2]) - 3)
-        stop2 = parent2[driver2][stop2_index]
+
+        stop2_changeable = False
+        locations_tried_counter2 = 0
+        while not stop2_changeable and locations_tried_counter2 < len(self.location_to_spot):
+            driver2 = random.choice(list(parent2.keys()))
+            stop2_index = random.randint(2, len(parent2[driver2]) - 3)
+            stop2 = parent2[driver2][stop2_index]
+            if stop2 not in self.unchangeable_spots:
+                stop2_changeable = True
+            else:
+                locations_tried_counter2 += 1
+
+        if not stop1_changeable or not stop2_changeable:
+            print('No changeable stops found, returning parents')
+            return parent1, parent2
 
         for key, value_list in child1.items():
             if stop2 in value_list:
@@ -86,10 +87,10 @@ class GeneticAlgorithm:
 
         if stop2 not in child1[driver1]:
             child1[driver1][stop1_index] = stop2
-
         else:
             print('stop already present')
             child1[driver1][stop1_index] = stop1
+
         if stop1 not in child2[driver2]:
             child2[driver2][stop2_index] = stop1
         else:
@@ -99,10 +100,11 @@ class GeneticAlgorithm:
         return child1, child2
 
     def evolve(self):
-        self.ranked_population = sorted(self.population, key=self.fitness)
+        self.ranked_population = sorted(self.population, key=self.fitness_evaluator.fitness)
         self.elites = self.ranked_population[:self.elitism_count]
         self.total_ranks = sum(range(1, len(self.ranked_population) - self.elitism_count + 1))
-        self.selection_probabilities = [(i + 1) / self.total_ranks for i in range(len(self.ranked_population) - self.elitism_count)]
+        self.selection_probabilities = [(i + 1) / self.total_ranks for i in
+                                        range(len(self.ranked_population) - self.elitism_count)]
         new_population = []
         new_population.extend(self.elites)
         while len(new_population) < self.population_size:
@@ -129,10 +131,10 @@ class GeneticAlgorithm:
 
         for generation in range(self.generations):
             self.evolve()
-            best_fitness = self.fitness(self.population[0])
-            print(min(self.population, key=self.fitness))
+            best_fitness = self.fitness_evaluator.fitness(self.population[0])
+            print(min(self.population, key=self.fitness_evaluator.fitness))
             print(f'Generation {generation}: Best Fitness = {best_fitness}')
-        best_solution = min(self.population, key=self.fitness)
+        best_solution = min(self.population, key=self.fitness_evaluator.fitness)
         routes_with_spots = self.reverse_transform_routes(best_solution)
         print(best_solution)
         print('len: ', len(best_solution))

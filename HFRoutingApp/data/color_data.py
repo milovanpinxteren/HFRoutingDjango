@@ -6,7 +6,7 @@ class ColorData:
     }
 
     colors_array = [
-        'lightred', 'blue', 'green', 'purple', 'orange', 'darkred', 'white', 'black', 'pink',
+        'lightred', 'blue', 'green', 'purple', 'orange', 'darkred', 'black', 'pink',
         'darkblue', 'darkgreen', 'cadetblue', 'darkpurple', 'lightblue',
         'lightgreen', 'gray', 'red', 'lightgray'
     ]
