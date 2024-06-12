@@ -1,3 +1,12 @@
+"""
+Evaluates the fitness of a solution.
+Currently based on:
+                    - Distance
+                    - Vehicle capacity
+
+To implement: Max driving time per driver (13:00 - operator starting time)?
+"""
+
 
 class FitnessEvaluator:
     def __init__(self, location_to_spot, spot_crates, distance_matrix, vehicle_capacity):
@@ -16,13 +25,14 @@ class FitnessEvaluator:
                         try:
                             spot_id = self.location_to_spot[route[i]]
                             total_load += self.spot_crates[spot_id]
-                            # if total_load > self.vehicle_capacity[vehicle]:
-                            #     total_distance += float("inf")
-                        except KeyError:  # spot not found -> error or it is a driver
+                            if total_load > self.vehicle_capacity[vehicle]:
+                                # print('Vehicle overload')
+                                total_distance = float("inf")
+                        except KeyError:  # spot not found -> it is a driver/hub
                             total_load += 0
                         route_distance += self.distance_matrix[(route[i], route[i + 1])]
                 total_distance += route_distance
             return total_distance
         except Exception as e:
             print(e)
-            return float("-inf")
+            return float("inf")

@@ -1,6 +1,7 @@
-from django.db.models import Q
+from django.db.models import Q, Sum, FloatField
+from django.db.models.functions import Coalesce
 
-from HFRoutingApp.models import DistanceMatrix, OperatorLocationLink
+from HFRoutingApp.models import DistanceMatrix, OperatorLocationLink, Spot
 
 
 class RouteUtils:
@@ -23,6 +24,7 @@ class RouteUtils:
             value = distance.distance_meters
             distance_matrix[key] = value
         return distance_matrix
+
     def get_nearest_location(self, current_location, locations):
         nearest_location = None
         shortest_distance = float('inf')
@@ -49,3 +51,11 @@ class RouteUtils:
         for operator in operators:
             capacity_dict[operator.id] = operator.max_vehicle_load
         return capacity_dict
+
+    def update_capacities(self, routes, capacities):
+        updated_capacities = {}
+        for operator_id, route in routes.items():
+            location_ids = [location.id for location in route]
+            total_avg_no_crates = Spot.objects.filter(location_id__in=location_ids).aggregate(total=Coalesce(Sum('avg_no_crates'), 0, output_field=FloatField()))['total']
+            updated_capacities[operator_id] = capacities[operator_id] - total_avg_no_crates
+        return updated_capacities

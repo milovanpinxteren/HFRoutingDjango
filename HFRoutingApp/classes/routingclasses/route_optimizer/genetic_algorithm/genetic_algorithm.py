@@ -16,7 +16,7 @@ class GeneticAlgorithm:
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
         self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
         self.population_size = 100
-        self.generations = 50
+        self.generations = 25
         self.mutation_rate = 0.01
         self.elitism_count = 5
         self.tournament_size = 3
@@ -24,7 +24,7 @@ class GeneticAlgorithm:
         self.operator_location_links = OperatorLocationLink.objects.all()
         self.unchangeable_spots = [link.location.id for link in self.operator_location_links]
         self.distance_matrix = self.route_utils.get_distance_matrix()
-        self.ga_helpers = GeneticAlgorithmHelpers(self.location_to_spot)
+        self.ga_helpers = GeneticAlgorithmHelpers(self.location_to_spot, self.unchangeable_spots)
         self.fitness_evaluator = FitnessEvaluator(self.location_to_spot, self.spot_crates, self.distance_matrix,
                                                   self.vehicle_capacity)
         self.child_maker = ChildMaker(self.location_to_spot, self.unchangeable_spots)

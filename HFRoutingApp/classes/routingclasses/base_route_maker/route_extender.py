@@ -13,9 +13,13 @@ class RouteExtender:
         self.genetic_algorithm = GeneticAlgorithm()
 
     def extend_route(self, routes, remaining_spots, operators):
+        print('extending')
         queues = self.create_queues(operators, remaining_spots)
         capacities = self.route_utils.get_vehicle_capacities(operators)
-        routes = self.insert_spots(queues, routes, capacities)
+        updated_capacities = self.route_utils.update_capacities(routes, capacities)
+        print('inserting')
+        routes = self.insert_spots(queues, routes, updated_capacities)
+        print('to GA')
         optimized_routes = self.genetic_algorithm.do_evolution(routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
@@ -41,7 +45,6 @@ class RouteExtender:
     def insert_spots(self, queues, routes, capacities):
         operators_count = len(queues)
         operators_tried = 0
-        # while any(not queue.empty() for queue in queues.values()):
         while operators_tried < operators_count:
             for operator, queue in queues.items():
                 if not queue.empty() and capacities[operator.id] > 0:
@@ -53,8 +56,10 @@ class RouteExtender:
                         operators_tried = 0
                     else:
                         operators_tried += 1
-                if operators_tried >= operators_count:
+                elif operators_tried >= operators_count:
                     print('Could not assign all spots to operators due to capacity constraint')
+                elif queue.empty():
+                    return routes
 
         return routes
 

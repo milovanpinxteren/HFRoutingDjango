@@ -5,6 +5,7 @@ class ChildMaker:
     def __init__(self, location_to_spot, unchangeable_spots):
         self.location_to_spot = location_to_spot
         self.unchangeable_spots = unchangeable_spots
+
     def crossover(self, parent1, parent2):
         child1 = {k: v[:] for k, v in parent1.items()}
         child2 = {k: v[:] for k, v in parent2.items()}

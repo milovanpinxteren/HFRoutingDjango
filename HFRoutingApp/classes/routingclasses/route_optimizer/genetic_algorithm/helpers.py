@@ -4,18 +4,25 @@ from HFRoutingApp.models import Spot, Location
 
 
 class GeneticAlgorithmHelpers:
-    def __init__(self, location_to_spot):
+    def __init__(self, location_to_spot, unchangeable_spots):
         self.location_to_spot = location_to_spot
+        self.unchangeable_spots = unchangeable_spots
+
     def initialize_population(self, routes, population_size):
         population = []
         for _ in range(population_size):
-            chromosome = {}
-            for operator, locations in routes.items():
-                preserved_locations = locations[:2] + locations[-2:]  # Preserve the first and last 2 locations
-                middle_locations = random.sample(locations[2:-2], len(locations) - 4)
-                # Combine the preserved, shuffled middle, and last locations to form the chromosome
-                chromosome[operator] = preserved_locations[:2] + middle_locations + preserved_locations[-2:]
-            population.append(chromosome)
+            individual = {}
+            for driver, route in routes.items():
+                fixed_stops_start = route[:2]
+                fixed_stops_end = route[-2:]
+                # Intermediate stops that are not in the unchangeable_stops list
+                intermediate_stops = [stop for stop in route[2:-2] if stop not in self.unchangeable_spots]
+
+                random.shuffle(intermediate_stops)
+
+                new_route = fixed_stops_start + intermediate_stops + fixed_stops_end
+                individual[driver] = new_route
+                population.append(individual)
         return population
 
     def mutate(self, child):
@@ -27,7 +34,6 @@ class GeneticAlgorithmHelpers:
         stop2_index = random.randint(2, len(child[driver2]) - 3)
         child[driver2].insert(stop2_index, stop)
         return child
-
 
     def reverse_transform_routes(self, transformed_routes):
         routes_with_spots = {}
