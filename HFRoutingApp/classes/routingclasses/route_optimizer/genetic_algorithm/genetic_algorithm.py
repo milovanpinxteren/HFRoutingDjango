@@ -66,21 +66,23 @@ class GeneticAlgorithm:
         print(original_len)
         print(transformed_routes)
         self.population = self.ga_helpers.initialize_population(transformed_routes, self.population_size)
-
+        global_best = {}
+        global_best_fitness = float('inf')
         for generation in range(self.generations):
             self.evolve()
-            best_fitness = self.fitness_evaluator.fitness(self.population[0])
             print(min(self.population, key=self.fitness_evaluator.fitness))
-            print(f'Generation {generation}: Best Fitness = {best_fitness}')
-        best_solution = min(self.population, key=self.fitness_evaluator.fitness)
-        routes_with_spots = self.ga_helpers.reverse_transform_routes(best_solution)
-        print(best_solution)
-        print('len: ', len(best_solution))
-        total_len = 0
-        for operator, route in best_solution.items():
-            print('route for ', operator, 'is length: ', len(route))
-            total_len += len(route)
-        print(total_len)
+            generational_best = min(self.population, key=self.fitness_evaluator.fitness)
+            generational_best_fitness = self.fitness_evaluator.fitness(generational_best)
+            print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
+            if generational_best_fitness < global_best_fitness:
+                print('New world record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
+                global_best = generational_best
+                global_best_fitness = generational_best_fitness
+
+        # best_solution = min(self.population, key=self.fitness_evaluator.fitness)
+
+
+        routes_with_spots = self.ga_helpers.reverse_transform_routes(global_best)
         return routes_with_spots
 
 

@@ -156,4 +156,7 @@ class DistanceMatrix(models.Model):
 
 
 
+class OperatorPlanning(models.Model):
+    day = models.DateField()
+    operators = models.ManyToManyField(Operator, blank=True)
 

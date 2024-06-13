@@ -80,3 +80,28 @@ If multiple spots on 1 physical location, make more locations
 > When adding a hub
 > - Add a location of the Hub's location
 > - Make the hub and assign the location to it
+
+
+#### Functionality, objectives and constraints
+Finding the routes with the shortest total distance while respecting
+- Vehicle capacity
+- Driver familarity/mandatory driver-location assignment 
+
+Flow:
+- A base route is constructed based on insertion
+  - Start with mandatory locations (from OperatorLocationLink)
+  - Insert non-mandatory locations until capacity constraint met
+  - pass to the GA
+- The Genetic Algorithm (GA)
+  - Makes a population by shuffling non-mandatory non-preserved (first 2, last2, mandatory stops) stops in a route
+  - For number of generations
+    - Evaluates fitness (Total distance, if capacity overload -> fitness = 'inf')
+    - Tournament selection to get parents
+    - Keep best solutions (elitism)
+    - Crossover to generate new population
+      - Switching non-mandatory non-preserved stops between routes
+      - Mutation based on probability
+        - Removing a stop from a route and adding it to another.
+
+### TODOS
+- 

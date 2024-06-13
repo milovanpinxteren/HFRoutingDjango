@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-
 from HFRoutingApp.classes.map_maker import MapMaker
 from HFRoutingApp.classes.routingclasses.base_route_maker.mandatory_route_maker import MandatoryRouteMaker
 from HFRoutingApp.classes.routingclasses.base_route_maker.route_extender import RouteExtender
@@ -10,13 +9,21 @@ from HFRoutingApp.classes.routingclasses.helpers.stop_getter import StopGetter
 
 @login_required
 def calculate_routes_for_date(request):
+    print('calculate for dates')
     stop_getter = StopGetter()
     date = request.GET.get('date', None)
     stops = stop_getter.get_stops_on_date(date)
 
-    context = {'stops': stops}
-    return render(request, 'routes/routes_overview.html', context)
+    mandatory_route_maker = MandatoryRouteMaker()
+    route_extender = RouteExtender()
+    map_maker = MapMaker()
+    print('making mandatory routes', stops)
+    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops)
+    extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
+    routes_map = map_maker.make_map(extended_routes, 'routes')
 
+    context = {'routes': True, 'map': routes_map._repr_html_()}
+    return render(request, 'routes/routes_overview.html', context)
 
 
 @login_required
@@ -36,7 +43,7 @@ def make_base_routes(request):
     route_extender = RouteExtender()
     map_maker = MapMaker()
 
-    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes()
+    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(False)
     extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
     routes_map = map_maker.make_map(extended_routes, 'routes')
 

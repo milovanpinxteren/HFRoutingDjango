@@ -6,9 +6,10 @@ Makes the base routes based on parallel insertion. Takes mandatory stops in rout
 constraints are met, returns routes as map input
 """
 
-
+#TODO: Check if it needs to be filled (fill_date of spot)
+#TODO: Cateringorders
 class MandatoryRouteMaker:
-    def make_mandatory_routes(self):
+    def make_mandatory_routes(self, spots_to_route):
         self.route_utils = RouteUtils()
         operators = Operator.objects.filter(active=True)
         self.hub_locations = [hub.location for hub in Hub.objects.all()]
@@ -22,8 +23,14 @@ class MandatoryRouteMaker:
             routed_locations.extend(mandatory_route)
             mandatory_routes[operator.id] = mandatory_route
 
-        remaining_spots = Spot.objects.filter(location__active=True).exclude(
-            location__in=routed_locations).select_related('location')
+        if spots_to_route:
+            print(spots_to_route)
+            remaining_spots = Spot.objects.filter(id__in=spots_to_route.keys(),location__active=True).exclude(
+                location__in=routed_locations).select_related('location')
+            #TODO: make remaining spots from spots to route
+        else:
+            remaining_spots = Spot.objects.filter(location__active=True).exclude(
+                location__in=routed_locations).select_related('location')
 
         return mandatory_routes, remaining_spots, operators
 

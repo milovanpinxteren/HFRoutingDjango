@@ -48,13 +48,13 @@ class ChildMaker:
         if stop2 not in child1[driver1]:
             child1[driver1][stop1_index] = stop2
         else:
-            print('stop already present')
+            # print('stop already present')
             child1[driver1][stop1_index] = stop1
 
         if stop1 not in child2[driver2]:
             child2[driver2][stop2_index] = stop1
         else:
-            print('stop already present')
+            # print('stop already present')
             child2[driver2][stop2_index] = stop2
 
         return child1, child2

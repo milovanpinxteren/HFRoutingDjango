@@ -37,31 +37,44 @@ class StopGetter:
                                                                         'catering_order__spot__location').filter(
             catering_order__delivery_date=date)
         picklist_lines = PickListLine.objects.select_related('spot', 'spot__location').filter(distr_date=date)
+        if not picklist_lines: #If the picklist is unkown -> Return all stops of all locations on date
+            picklist_lines = self.get_stops_to_fill(date)
 
         for obj in chain(catering_order_lines, picklist_lines):
             if obj.__class__.__name__ == 'CateringOrderLine':
-                prefix = obj.catering_order
+                prefix = obj.catering_order.spot
+                quantity = obj.quantity
             elif obj.__class__.__name__ == 'PickListLine':
+                prefix = obj.spot
+                quantity = obj.quantity
+            elif obj.__class__.__name__ == 'Spot':
                 prefix = obj
+                quantity = obj.avg_no_crates
             stop_info = {
-                'quantity': obj.quantity,
-                'pilot': prefix.spot.pilot,
-                'fill_time': prefix.spot.fill_time_minutes,
-                'walking_time': prefix.spot.walking_time_minutes,
-                'removal_probability': prefix.spot.removal_probability,
-                'notes': prefix.spot.notes,
+                'quantity': quantity,
+                'pilot': prefix.pilot,
+                'fill_time': prefix.fill_time_minutes,
+                'walking_time': prefix.walking_time_minutes,
+                'removal_probability': prefix.removal_probability,
+                'notes': prefix.notes,
                 'location': {
-                    'locationID': prefix.spot.location.id,
-                    'shortcode': prefix.spot.location.shortcode,
-                    'description': prefix.spot.location.description,
-                    'notes': prefix.spot.location.notes,
-                    'opening_time': prefix.spot.location.opening_time,
-                    'address': prefix.spot.location.address,
-                    'geolocation': prefix.spot.location.geolocation,
+                    'locationID': prefix.location.id,
+                    'shortcode': prefix.location.shortcode,
+                    'description': prefix.location.description,
+                    'notes': prefix.location.notes,
+                    'opening_time': prefix.location.opening_time,
+                    'address': prefix.location.address,
+                    'geolocation': prefix.location.geolocation,
                 }
             }
-            stops[prefix.spot.id] = stop_info
+            stops[prefix.id] = stop_info
         return {
             'date': date,
             'stops': stops,
         }
+
+    def get_stops_to_fill(self, date):
+        weekday = datetime.strptime(date, '%Y-%m-%d').weekday() #(0 = Monday, 6 = Sunday)
+        spots = Spot.objects.filter(fill_dates=weekday)
+
+        return spots
