@@ -88,6 +88,10 @@ Finding the routes with the shortest total distance while respecting
 - Driver familarity/mandatory driver-location assignment 
 
 Flow:
+- Get all stops to fill
+  - Given a date, get all cateringorders and spots in picklist
+  - If no picklist is found (e.g. prediction for future/base route) -> get all stops which need to be filled on that (week)day
+- Return the stops, assign mandatory stops to driver
 - A base route is constructed based on insertion
   - Start with mandatory locations (from OperatorLocationLink)
   - Insert non-mandatory locations until capacity constraint met
@@ -102,6 +106,9 @@ Flow:
       - Switching non-mandatory non-preserved stops between routes
       - Mutation based on probability
         - Removing a stop from a route and adding it to another.
+
+#### Fitness
+
 
 ### TODOS
 - 

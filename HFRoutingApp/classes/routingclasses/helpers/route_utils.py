@@ -59,3 +59,4 @@ class RouteUtils:
             total_avg_no_crates = Spot.objects.filter(location_id__in=location_ids).aggregate(total=Coalesce(Sum('avg_no_crates'), 0, output_field=FloatField()))['total']
             updated_capacities[operator_id] = capacities[operator_id] - total_avg_no_crates
         return updated_capacities
+

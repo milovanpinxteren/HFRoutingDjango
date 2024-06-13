@@ -34,7 +34,7 @@ class Customer(models.Model):
         return self.shortcode
 
 
-class Location(models.Model):
+class Location(models.Model): #wordt Geo
     shortcode = models.CharField(max_length=7)
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -86,7 +86,7 @@ class Operator(models.Model):
     max_vehicle_load = models.IntegerField()
     starting_time = models.TimeField()
     active = models.BooleanField(default=True)
-    availability = models.ManyToManyField(Weekday, blank=True)
+    # availability = models.ManyToManyField(Weekday, blank=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
 
     def __str__(self):
@@ -148,6 +148,7 @@ class Route(models.Model):
     order = models.CharField(max_length=1000) #array with the stops in driving order
     day = models.DateField()
     hub = models.ForeignKey(Hub, on_delete=models.CASCADE, default=0)
+    is_base_route = models.BooleanField(default=False)
 
 class DistanceMatrix(models.Model):
     origin = models.ForeignKey(Location, related_name='distances_from', on_delete=models.CASCADE, default=0)

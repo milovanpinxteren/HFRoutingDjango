@@ -20,5 +20,6 @@
         {{ map|safe }}
     </div>
 {% else %}
-    <div>Geen routes gevonden</div>
+    <div>Geen routes gevonden, controleer of de datum correct is en de planning bekend is</div>
+    <div>Foutmelding: {{ message }}</div>
 {% endif %}
