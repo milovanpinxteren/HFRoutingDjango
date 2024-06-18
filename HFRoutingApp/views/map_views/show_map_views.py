@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from HFRoutingApp.classes.map_maker import MapMaker
-from HFRoutingApp.models import Hub, Location, Operator
+from HFRoutingApp.models import Hub, Operator, Location
 
 
 @login_required
@@ -15,20 +15,20 @@ def show_map(request):
     customer_locations = []
     operator_locations = []
     for hub in hubs:
-        if hub.location.geolocation:
+        if hub.geo.geolocation:
             hub_locations.append(
-                {'name': hub.shortcode, 'address': hub.location.address, 'lat': hub.location.geolocation.lat,
-                 'lon': hub.location.geolocation.lon})
+                {'name': hub.shortcode, 'address': hub.geo.address, 'lat': hub.geo.geolocation.lat,
+                 'lon': hub.geo.geolocation.lon})
     for location in locations:
-        if location.geolocation:
+        if location.geo.geolocation:
             customer_locations.append(
-                {'name': location.shortcode, 'address': location.address, 'lat': location.geolocation.lat,
-                 'lon': location.geolocation.lon})
+                {'name': location.shortcode, 'address': location.geo.address, 'lat': location.geo.geolocation.lat,
+                 'lon': location.geo.geolocation.lon})
     for operator in operators:
         if operator.location.geolocation:
             operator_locations.append(
-                {'name': operator.user.username, 'address': operator.location.address, 'lat': operator.location.geolocation.lat,
-                 'lon': operator.location.geolocation.lon})
+                {'name': operator.user.username, 'address': operator.geo.address, 'lat': operator.geo.geolocation.lat,
+                 'lon': operator.geo.geolocation.lon})
     map_dict = {'hubs': hub_locations,
                 'customers': customer_locations,
                 'operators': operator_locations}

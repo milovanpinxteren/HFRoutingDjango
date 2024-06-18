@@ -1,12 +1,12 @@
-from HFRoutingApp.models import Location, Hub
+from HFRoutingApp.models import Geo, Hub
 from sklearn.cluster import KMeans
 import numpy as np
 
 
 class ClusterMaker:
     def make_clusters(self, no_clusters):
-        locations = Location.objects.filter(active=True)
-        self.hubs = Hub.objects.filter(location__active=True).select_related('location')
+        locations = Geo.objects.filter(active=True)
+        self.hubs = Hub.objects.filter(active=True).select_related('geo')
 
         customer_locations = []
         for location in locations:

@@ -6,7 +6,7 @@ from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.child_maker import ChildMaker
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.fitness_evaluator import FitnessEvaluator
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.helpers import GeneticAlgorithmHelpers
-from HFRoutingApp.models import Spot, Operator, OperatorLocationLink, Location
+from HFRoutingApp.models import Spot, Operator, OperatorGeoLink, Geo
 
 
 class GeneticAlgorithm:
@@ -15,8 +15,8 @@ class GeneticAlgorithm:
         self.spot_crates = {spot.id: spot.avg_no_crates for spot in Spot.objects.all()}
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
         self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
-        self.unchangeable_spots = [link.location.id for link in OperatorLocationLink.objects.all()]
-        self.location_opening_times = {location.id: location.opening_time for location in Location.objects.all()}
+        self.unchangeable_spots = [link.location.id for link in OperatorGeoLink.objects.all()]
+        self.location_opening_times = {location.id: location.opening_time for location in Geo.objects.all()}
         self.starting_times_dict = {operator.id: operator.starting_time for operator in Operator.objects.all()}
         self.spot_fill_times = {spot['location']: spot['total_time'] for spot in Spot.objects.values('location')
                                 .annotate(total_time=Sum(F('fill_time_minutes') + F('walking_time_minutes')))}
@@ -60,7 +60,7 @@ class GeneticAlgorithm:
                     child1 = self.ga_helpers.mutate(child1)
                     child2 = self.ga_helpers.mutate(child2)
             except Exception as e:
-                print(e)
+                print('Evolution error: ', e)
                 child1, child2 = parent1, parent2
 
             new_population.extend([child1, child2])

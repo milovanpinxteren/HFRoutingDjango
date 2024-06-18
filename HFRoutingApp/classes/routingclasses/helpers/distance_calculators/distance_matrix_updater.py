@@ -4,7 +4,7 @@ from django.db.models import Value
 import googlemaps
 from dotenv import load_dotenv
 import os
-from HFRoutingApp.models import Location, Hub, DistanceMatrix
+from HFRoutingApp.models import Geo, Hub, DistanceMatrix
 
 
 class DistanceMatrixUpdater:
@@ -17,7 +17,7 @@ class DistanceMatrixUpdater:
         google_api_key = os.getenv('GOOGLE_API_KEY')
         google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
 
-        locations = Location.objects.filter(active=True).annotate(model=Value('Location')).values_list(
+        locations = Geo.objects.filter(active=True).annotate(model=Value('Location')).values_list(
             'customer__shortcode', 'id',
             'shortcode', 'geolocation')
 
@@ -48,9 +48,9 @@ class DistanceMatrixUpdater:
 
     def save_distances(self, all_distances_dict):
         for origin_id, destinations in all_distances_dict.items():
-            origin = Location.objects.get(id=origin_id)
+            origin = Geo.objects.get(id=origin_id)
             for destination_id, distance in destinations.items():
-                destination = Location.objects.get(id=destination_id)
+                destination = Geo.objects.get(id=destination_id)
                 DistanceMatrix.objects.update_or_create(origin=origin, destination=destination,
                                                         defaults={'distance_meters': distance})
         return 'Distances saved'

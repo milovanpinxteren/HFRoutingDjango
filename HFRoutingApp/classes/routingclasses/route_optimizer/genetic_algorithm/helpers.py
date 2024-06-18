@@ -1,6 +1,6 @@
 import random
 
-from HFRoutingApp.models import Spot, Location
+from HFRoutingApp.models import Spot, Geo
 
 
 class GeneticAlgorithmHelpers:
@@ -45,6 +45,6 @@ class GeneticAlgorithmHelpers:
                     spot_instance = Spot.objects.get(id=spot_id)
                     routes_with_spots[vehicle].append(spot_instance)
                 else:
-                    location_instance = Location.objects.get(id=loc_id)
+                    location_instance = Geo.objects.get(id=loc_id)
                     routes_with_spots[vehicle].append(location_instance)
         return routes_with_spots

@@ -20,6 +20,10 @@ class Weekday(models.Model):
         return f'{self.get_day_display()}'
 
 
+class Geo(models.Model):
+    geo_id = models.AutoField(primary_key=True)
+    address = map_fields.AddressField(_('address'), max_length=200, blank=True, null=True)
+    geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
 
 
 class Customer(models.Model):
@@ -37,13 +41,12 @@ class Customer(models.Model):
 class Location(models.Model): #wordt Geo
     shortcode = models.CharField(max_length=7)
     description = models.CharField(max_length=80)
-    created_at = models.DateTimeField(auto_now_add=True)
+    geo = models.ForeignKey(Geo, models.PROTECT, blank=True, null=True)
     active = models.BooleanField(default=True)
     customer = models.ForeignKey(Customer, models.PROTECT, default=None, limit_choices_to={'active': True},
                                  verbose_name=Customer._meta.verbose_name)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    address = map_fields.AddressField(_('address'), max_length=200, blank=True, null=True)
-    geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
     opening_time = models.TimeField(_('opening time'), blank=True, null=True)
 
@@ -51,28 +54,12 @@ class Location(models.Model): #wordt Geo
         return self.shortcode
 
 
-class Machine(models.Model):
-    shortcode = models.CharField(max_length=7)
-    description = models.CharField(max_length=80)
-    created_at = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=True)
-    machine_id = models.IntegerField(default=None, blank=True, null=True)
-    brand = models.CharField(max_length=80)
-    manufacturer_serialnumber = models.CharField(max_length=80)
-    hostname = models.CharField(max_length=80, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    external_id = models.SmallIntegerField()
-    honesty_model = models.BooleanField(default=False)
-
-
-    def __str__(self):
-        return self.shortcode
-
 
 class Hub(models.Model):
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, default=0)
+    geo = models.ForeignKey(Geo, on_delete=models.CASCADE, default=0)
     shortcode = models.CharField(max_length=7)
     description = models.CharField(max_length=80)
+    active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
@@ -82,20 +69,19 @@ class Hub(models.Model):
 
 class Operator(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, default=0)
+    geo = models.ForeignKey(Geo, on_delete=models.CASCADE, default=0)
     max_vehicle_load = models.IntegerField()
     starting_time = models.TimeField()
     active = models.BooleanField(default=True)
-    # availability = models.ManyToManyField(Weekday, blank=True)
     notes = models.TextField(_('notes'), blank=True, null=True)
 
     def __str__(self):
         return self.user.username
 
 
-class OperatorLocationLink(models.Model):  # welke chauffeur mag welke route
+class OperatorGeoLink(models.Model):  # welke chauffeur mag welke route
     operator = models.ForeignKey(Operator, on_delete=models.CASCADE)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    geo = models.ForeignKey(Geo, on_delete=models.CASCADE)
 
 
 class Spot(models.Model):
@@ -103,14 +89,9 @@ class Spot(models.Model):
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    location = models.ForeignKey(Location, models.PROTECT, default=None, limit_choices_to={'active': True},)
-    machine = models.ForeignKey(Machine, models.PROTECT, default=None, limit_choices_to={'active': True},)
+    geo = models.ForeignKey(Geo, models.PROTECT, default=None, limit_choices_to={'active': True},)
     updated_at = models.DateTimeField(auto_now=True)
     is_catering = models.BooleanField(default=False)
-    activation_date = models.DateField()
-    pricelist_id = models.IntegerField(default=None, blank=True, null=True)
-    resembles_id = models.IntegerField(default=None, blank=True, null=True)
-    product_filter = models.IntegerField(default=None, blank=True, null=True)
     pilot = models.BooleanField(default=False)
     spot_hours = models.IntegerField(default=0) #if office or hospital
     #Added columns
@@ -144,15 +125,15 @@ class PickListLine(models.Model):
 class Route(models.Model):
     name = models.CharField(max_length=100)
     operator = models.ForeignKey(Operator, on_delete=models.CASCADE)
-    locations = models.ManyToManyField(Location)
+    geos = models.ManyToManyField(Geo)
     order = models.CharField(max_length=1000) #array with the stops in driving order
     day = models.DateField()
     hub = models.ForeignKey(Hub, on_delete=models.CASCADE, default=0)
     is_base_route = models.BooleanField(default=False)
 
 class DistanceMatrix(models.Model):
-    origin = models.ForeignKey(Location, related_name='distances_from', on_delete=models.CASCADE, default=0)
-    destination = models.ForeignKey(Location, related_name='distances_to', on_delete=models.CASCADE, default=0)
+    origin = models.ForeignKey(Geo, related_name='distances_from', on_delete=models.CASCADE, default=0)
+    destination = models.ForeignKey(Geo, related_name='distances_to', on_delete=models.CASCADE, default=0)
     distance_meters = models.IntegerField(null=True)
 
 

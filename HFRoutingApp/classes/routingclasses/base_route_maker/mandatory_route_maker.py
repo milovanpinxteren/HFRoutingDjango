@@ -6,6 +6,7 @@ Makes the base routes based on parallel insertion. Takes mandatory stops in rout
 constraints are met, returns routes as map input
 """
 
+
 class MandatoryRouteMaker:
     def make_mandatory_routes(self, spots_to_route, date):
         self.route_utils = RouteUtils()
@@ -26,11 +27,10 @@ class MandatoryRouteMaker:
 
         if spots_to_route:
             print('Spots to route: ', spots_to_route)
-            remaining_spots = Spot.objects.filter(id__in=spots_to_route['stops'].keys(),location__active=True).exclude(
-                location__in=routed_locations).select_related('location')
+            remaining_spots = Spot.objects.filter(id__in=spots_to_route['stops'].keys(), active=True).exclude(
+                geo__in=routed_locations).select_related('geo')
         else:
-            remaining_spots = Spot.objects.filter(location__active=True).exclude(
-                location__in=routed_locations).select_related('location')
+            remaining_spots = Spot.objects.filter(active=True).exclude(geo__in=routed_locations).select_related('geo')
 
         return mandatory_routes, remaining_spots, operators
 
@@ -39,7 +39,8 @@ class MandatoryRouteMaker:
         current_location = operator.location
         route = [current_location]
 
-        closest_hub = self.route_utils.get_nearest_location(current_location, self.hub_locations) #closest hub to driver
+        closest_hub = self.route_utils.get_nearest_location(current_location,
+                                                            self.hub_locations)  # closest hub to driver
         route.append(closest_hub)
         current_location = closest_hub
 

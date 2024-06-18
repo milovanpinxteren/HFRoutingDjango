@@ -1,7 +1,7 @@
 from django.db.models import Q, Sum, FloatField
 from django.db.models.functions import Coalesce
 
-from HFRoutingApp.models import DistanceMatrix, OperatorLocationLink, Spot
+from HFRoutingApp.models import DistanceMatrix, OperatorGeoLink, Spot
 
 
 class RouteUtils:
@@ -42,7 +42,7 @@ class RouteUtils:
         """
         mandatory_groups = {}
         for operator in operators:
-            spot_ids = OperatorLocationLink.objects.filter(operator=operator).values_list('location__spot', flat=True)
+            spot_ids = OperatorGeoLink.objects.filter(operator=operator).values_list('location__spot', flat=True)
             mandatory_groups[operator.id] = spot_ids
         return mandatory_groups
 
