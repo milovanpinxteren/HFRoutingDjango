@@ -25,7 +25,7 @@ def show_map(request):
                 {'name': location.shortcode, 'address': location.geo.address, 'lat': location.geo.geolocation.lat,
                  'lon': location.geo.geolocation.lon})
     for operator in operators:
-        if operator.location.geolocation:
+        if operator.geo.geolocation:
             operator_locations.append(
                 {'name': operator.user.username, 'address': operator.geo.address, 'lat': operator.geo.geolocation.lat,
                  'lon': operator.geo.geolocation.lon})

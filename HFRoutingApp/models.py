@@ -89,7 +89,7 @@ class Spot(models.Model):
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    geo = models.ForeignKey(Geo, models.PROTECT, default=None, limit_choices_to={'active': True},)
+    location = models.ForeignKey(Location, models.PROTECT, default=None, limit_choices_to={'active': True},)
     updated_at = models.DateTimeField(auto_now=True)
     is_catering = models.BooleanField(default=False)
     pilot = models.BooleanField(default=False)
@@ -134,7 +134,7 @@ class Route(models.Model):
 class DistanceMatrix(models.Model):
     origin = models.ForeignKey(Geo, related_name='distances_from', on_delete=models.CASCADE, default=0)
     destination = models.ForeignKey(Geo, related_name='distances_to', on_delete=models.CASCADE, default=0)
-    distance_meters = models.IntegerField(null=True)
+    distance_meters = models.FloatField(null=True)
 
 
 

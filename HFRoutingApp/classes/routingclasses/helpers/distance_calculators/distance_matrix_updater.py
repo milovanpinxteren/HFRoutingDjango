@@ -4,7 +4,7 @@ from django.db.models import Value
 import googlemaps
 from dotenv import load_dotenv
 import os
-from HFRoutingApp.models import Geo, Hub, DistanceMatrix
+from HFRoutingApp.models import Geo, DistanceMatrix
 
 
 class DistanceMatrixUpdater:
@@ -16,16 +16,14 @@ class DistanceMatrixUpdater:
         load_dotenv()
         google_api_key = os.getenv('GOOGLE_API_KEY')
         google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
-
-        locations = Geo.objects.filter(active=True).annotate(model=Value('Location')).values_list(
-            'customer__shortcode', 'id',
-            'shortcode', 'geolocation')
-
         gmaps = googlemaps.Client(key=google_api_key, client_secret=google_client_secret)
         geolocations = {}
+
+        locations = Geo.objects.all().annotate(model=Value('Location')).values_list(
+            'geo_id',
+            'geolocation')
         for location in list(locations):
-            geolocations[location[1]] = {'customer__shortcode': location[0], 'shortcode': location[2],
-                                         'lat': location[3].lat, 'lon': location[3].lon}
+            geolocations[location[0]] = {'lat': location[1].lat, 'lon': location[1].lon}
 
         geolocation_chunks = self.chunks(geolocations)
         all_distances_dict = {}
@@ -37,9 +35,12 @@ class DistanceMatrixUpdater:
                 gmaps_response = gmaps.distance_matrix((origin_info['lat'], origin_info['lon']), destinations,
                                                        mode="driving")
                 for index, distance_row in enumerate(gmaps_response['rows'][0]['elements']):
-                    distance = distance_row['distance']['value']
                     destination_id = list(chunk.keys())[index]
-                    location_distance_dict[destination_id] = distance
+                    if distance_row['status'] == 'OK':
+                        distance = distance_row['distance']['value']
+                        location_distance_dict[destination_id] = distance
+                    else:
+                        location_distance_dict[destination_id] = float('inf')
             all_distances_dict[origin_location_id] = location_distance_dict
         self.save_distances(all_distances_dict)
         return 'Distance Matrix Updated'
@@ -48,9 +49,9 @@ class DistanceMatrixUpdater:
 
     def save_distances(self, all_distances_dict):
         for origin_id, destinations in all_distances_dict.items():
-            origin = Geo.objects.get(id=origin_id)
+            origin = Geo.objects.get(geo_id=origin_id)
             for destination_id, distance in destinations.items():
-                destination = Geo.objects.get(id=destination_id)
+                destination = Geo.objects.get(geo_id=destination_id)
                 DistanceMatrix.objects.update_or_create(origin=origin, destination=destination,
                                                         defaults={'distance_meters': distance})
         return 'Distances saved'

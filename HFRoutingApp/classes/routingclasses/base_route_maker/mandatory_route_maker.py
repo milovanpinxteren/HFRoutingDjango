@@ -14,7 +14,7 @@ class MandatoryRouteMaker:
             operators = Operator.objects.filter(active=True, operatorplanning__day=date)
         else:
             operators = Operator.objects.filter(active=True)
-        self.hub_locations = [hub.location for hub in Hub.objects.all()]
+        self.hub_locations = [hub.geo for hub in Hub.objects.all()]
         mandatory_groups = self.route_utils.get_mandatory_groups(operators)
 
         routed_locations = []
