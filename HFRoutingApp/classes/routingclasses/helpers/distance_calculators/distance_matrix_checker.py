@@ -22,13 +22,18 @@ class DistanceMatrixChecker:
             dest = (obj.destination.geolocation.lat, obj.destination.geolocation.lon)
             original_distance = obj.distance_meters
             gmaps_response = gmaps.distance_matrix(origin, dest, mode="driving")
-            distance = gmaps_response['rows'][0]['elements'][0]['distance']['value']
-            if abs(original_distance - distance) > 1000: #If the difference is more than 1 kilometer
-                incorrect_distances_counter += 1
-                locations = obj.origin.customer.shortcode + ' - ' + obj.destination.customer.shortcode
-                response_dict[incorrect_distances_counter] = {locations: original_distance - distance}
-                obj.distance_meters = distance
-                obj.save()
+            try:
+                distance = gmaps_response['rows'][0]['elements'][0]['distance']['value']
+                if abs(original_distance - distance) > 1000: #If the difference is more than 1 kilometer
+                    incorrect_distances_counter += 1
+                    locations = str(obj.origin_id) + ' - ' + str(obj.destination_id)
+                    response_dict[incorrect_distances_counter] = {locations: original_distance - distance}
+                    obj.distance_meters = distance
+                    obj.save()
+            except Exception as e:
+                print('CHECK DISTANCES ERROR: ', e)
+        if len(response_dict) == 0:
+            response_dict[1] = {str(0) + ' - ' + str(0): '50 random plekken gecheckt, 0 incorrecte gevonden'}
         return response_dict
 
     def get_random_distance_matrices(self):
