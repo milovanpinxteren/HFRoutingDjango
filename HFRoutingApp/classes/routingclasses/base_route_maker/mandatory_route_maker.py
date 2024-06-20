@@ -30,13 +30,14 @@ class MandatoryRouteMaker:
             remaining_spots = Spot.objects.filter(id__in=spots_to_route['stops'].keys(), active=True).exclude(
                 geo__in=routed_locations).select_related('geo')
         else:
-            remaining_spots = Spot.objects.filter(active=True).exclude(geo__in=routed_locations).select_related('geo')
+            remaining_spots = Spot.objects.filter(active=True).exclude(
+                location__geo__in=routed_locations).select_related('location__geo')
 
         return mandatory_routes, remaining_spots, operators
 
     def create_mandatory_route(self, operator, mandatory_spots):
         spots = Spot.objects.filter(id__in=mandatory_spots)
-        current_location = operator.location
+        current_location = operator.geo
         route = [current_location]
 
         closest_hub = self.route_utils.get_nearest_location(current_location,
@@ -45,7 +46,7 @@ class MandatoryRouteMaker:
         current_location = closest_hub
 
         if spots:  # If there is a mandatory driver-location assignment
-            spots_list = [spot.location for spot in spots]
+            spots_list = [spot.location.geo for spot in spots]
             while spots_list:
                 closest_spot = self.route_utils.get_nearest_location(current_location, spots_list)
                 route.append(closest_spot)
@@ -53,5 +54,5 @@ class MandatoryRouteMaker:
                 current_location = closest_spot
 
         route.append(closest_hub)
-        route.append(operator.location)
+        route.append(operator.geo)
         return route

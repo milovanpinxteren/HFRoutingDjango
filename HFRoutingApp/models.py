@@ -25,6 +25,9 @@ class Geo(models.Model):
     address = map_fields.AddressField(_('address'), max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(_('geolocation'), max_length=100, blank=True, null=True)
 
+    def __str__(self):
+        location = Location.objects.filter(geo=self).first()
+        return location.shortcode if location else super().__str__()
 
 class Customer(models.Model):
     shortcode = models.CharField(max_length=7)
@@ -82,6 +85,7 @@ class Operator(models.Model):
 class OperatorGeoLink(models.Model):  # welke chauffeur mag welke route
     operator = models.ForeignKey(Operator, on_delete=models.CASCADE)
     geo = models.ForeignKey(Geo, on_delete=models.CASCADE)
+
 
 
 class Spot(models.Model):

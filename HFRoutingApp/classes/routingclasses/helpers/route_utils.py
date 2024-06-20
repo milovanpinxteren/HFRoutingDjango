@@ -20,7 +20,7 @@ class RouteUtils:
         distance_matrix = {}
         distances = DistanceMatrix.objects.all()
         for distance in distances:
-            key = (distance.origin.id, distance.destination.id)
+            key = (distance.origin.geo_id, distance.destination.geo_id)
             value = distance.distance_meters
             distance_matrix[key] = value
         return distance_matrix
@@ -42,7 +42,7 @@ class RouteUtils:
         """
         mandatory_groups = {}
         for operator in operators:
-            spot_ids = OperatorGeoLink.objects.filter(operator=operator).values_list('location__spot', flat=True)
+            spot_ids = OperatorGeoLink.objects.filter(operator=operator).values_list('geo__location__spot', flat=True)
             mandatory_groups[operator.id] = spot_ids
         return mandatory_groups
 
@@ -55,7 +55,8 @@ class RouteUtils:
     def update_capacities(self, routes, capacities):
         updated_capacities = {}
         for operator_id, route in routes.items():
-            location_ids = [location.id for location in route]
+            # location_ids = [geo.location.id for geo in route]
+            location_ids = [loc.id for geo in route for loc in geo.location_set.all() if loc is not None]
             total_avg_no_crates = Spot.objects.filter(location_id__in=location_ids).aggregate(total=Coalesce(Sum('avg_no_crates'), 0, output_field=FloatField()))['total']
             updated_capacities[operator_id] = capacities[operator_id] - total_avg_no_crates
         return updated_capacities

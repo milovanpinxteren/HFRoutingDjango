@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 
 from django.db.models import Sum, F
 
@@ -14,12 +15,19 @@ class GeneticAlgorithm:
         # Dict generators
         self.spot_crates = {spot.id: spot.avg_no_crates for spot in Spot.objects.all()}
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
-        self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
-        self.unchangeable_spots = [link.location.id for link in OperatorGeoLink.objects.all()]
-        self.location_opening_times = {location.id: location.opening_time for location in Location.objects.all()}
+        # self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
+        self.geos_to_spot = {spot.location.geo_id: spot.id for spot in Spot.objects.all()}
+        self.unchangeable_spots = [link.geo_id for link in OperatorGeoLink.objects.all()]
+        self.location_opening_times = {location.geo_id: location.opening_time for location in Location.objects.all()}
         self.starting_times_dict = {operator.id: operator.starting_time for operator in Operator.objects.all()}
-        self.spot_fill_times = {spot['location']: spot['total_time'] for spot in Spot.objects.values('location')
-                                .annotate(total_time=Sum(F('fill_time_minutes') + F('walking_time_minutes')))}
+        # self.spot_fill_times = {spot['location']: spot['total_time'] for spot in Spot.objects.values('location')
+        # .annotate(total_time=Sum(F('fill_time_minutes') + F('walking_time_minutes')))}
+
+        self.spot_fill_times = defaultdict(int)
+        spots = Spot.objects.select_related('location__geo').all()
+        for spot in spots:
+            geo_id = spot.location.geo.geo_id
+            self.spot_fill_times[geo_id] += ((spot.fill_time_minutes or 0) + (spot.walking_time_minutes or 0))
         # Hyperparameters
         self.population_size = 100
         self.generations = 25
@@ -30,11 +38,11 @@ class GeneticAlgorithm:
         # Imports/inits
         self.route_utils = RouteUtils()
         self.distance_matrix = self.route_utils.get_distance_matrix()
-        self.ga_helpers = GeneticAlgorithmHelpers(self.location_to_spot, self.unchangeable_spots)
-        self.fitness_evaluator = FitnessEvaluator(self.location_to_spot, self.spot_crates, self.distance_matrix,
+        self.ga_helpers = GeneticAlgorithmHelpers(self.geos_to_spot, self.unchangeable_spots)
+        self.fitness_evaluator = FitnessEvaluator(self.geos_to_spot, self.spot_crates, self.distance_matrix,
                                                   self.vehicle_capacity, self.starting_times_dict, self.spot_fill_times,
                                                   self.location_opening_times, self.travel_time_exceeded_penalty)
-        self.child_maker = ChildMaker(self.location_to_spot, self.unchangeable_spots)
+        self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_spots)
 
     def tournament_selection(self):
         selected = []
@@ -67,8 +75,16 @@ class GeneticAlgorithm:
         self.population = new_population
 
     def do_evolution(self, routes):
-        transformed_routes = {vehicle: [getattr(loc, 'location', loc).id for loc in locations] for vehicle, locations in
-                              routes.items()}
+        transformed_routes = {}
+        for vehicle, stops in routes.items():
+            vehicle_array = []
+            for stop in stops:
+                if isinstance(stop, Geo):
+                    vehicle_array.append(stop.geo_id)
+                elif isinstance(stop, Spot):
+                    vehicle_array.append(stop.location.geo_id)
+            transformed_routes[vehicle] = vehicle_array
+        # transformed_routes = {}
         print('original')
         original_len = 0
         for operator, route in transformed_routes.items():

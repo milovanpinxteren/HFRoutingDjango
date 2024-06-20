@@ -18,9 +18,9 @@ class RouteExtender:
         capacities = self.route_utils.get_vehicle_capacities(operators)
         updated_capacities = self.route_utils.update_capacities(routes, capacities)
         print('inserting')
-        routes = self.insert_spots(queues, routes, updated_capacities)
+        inserted_routes = self.insert_spots(queues, routes, updated_capacities)
         print('to GA')
-        optimized_routes = self.genetic_algorithm.do_evolution(routes)
+        optimized_routes = self.genetic_algorithm.do_evolution(inserted_routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
         return prepared_routes
@@ -39,7 +39,7 @@ class RouteExtender:
         return queues
 
     def calculate_cost(self, spot, operator):
-        distance = self.route_utils.get_distance(spot.location, operator.location)
+        distance = self.route_utils.get_distance(spot.location.geo, operator.geo)
         return distance
 
     def insert_spots(self, queues, routes, capacities):
@@ -49,7 +49,7 @@ class RouteExtender:
             for operator, queue in queues.items():
                 if not queue.empty() and capacities[operator.id] > 0:
                     cost, _, spot = queue.get()
-                    if capacities[operator.id] > spot.avg_no_crates:
+                    if capacities[operator.id] > (float(spot.avg_no_crates) if spot.avg_no_crates else 0):
                         routes[operator.id] = routes[operator.id][:-2] + [spot] + routes[operator.id][-2:]
                         capacities[operator.id] -= spot.avg_no_crates
                         self.remove_spot_from_all_queues(queues, spot)

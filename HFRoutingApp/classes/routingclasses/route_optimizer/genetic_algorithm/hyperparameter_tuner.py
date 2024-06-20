@@ -52,10 +52,10 @@ def evaluate_ga(params):
 
 # Define the hyperparameter space
 hyperparameter_space = {
-    'population_size': [50, 100, 150],
-    'generations': [500, 1000, 1500],
-    'mutation_rate': [0.01, 0.05, 0.1],
-    'elitism_count': [1, 2, 3, 5]
+    'population_size': list(range(50, 250, 1)),
+    'generations': list(range(500, 2500, 1)),
+    'mutation_rate': [0 + 0.01 * i for i in range(int((0.4 - 0) / 0.01))],
+    'elitism_count': list(range(1, 15, 1))
 }
 
 # Create the tuner and perform grid search

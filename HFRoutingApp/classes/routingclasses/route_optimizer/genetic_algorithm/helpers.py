@@ -4,8 +4,8 @@ from HFRoutingApp.models import Spot, Geo
 
 
 class GeneticAlgorithmHelpers:
-    def __init__(self, location_to_spot, unchangeable_spots):
-        self.location_to_spot = location_to_spot
+    def __init__(self, geos_to_spot, unchangeable_spots):
+        self.geos_to_spot = geos_to_spot
         self.unchangeable_spots = unchangeable_spots
 
     def initialize_population(self, routes, population_size):
@@ -37,14 +37,14 @@ class GeneticAlgorithmHelpers:
 
     def reverse_transform_routes(self, transformed_routes):
         routes_with_spots = {}
-        for vehicle, locations in transformed_routes.items():
+        for vehicle, geos in transformed_routes.items():
             routes_with_spots[vehicle] = []
-            for loc_id in locations:
-                spot_id = self.location_to_spot.get(loc_id)
+            for geo_id in geos:
+                spot_id = self.geos_to_spot.get(geo_id)
                 if spot_id is not None:
                     spot_instance = Spot.objects.get(id=spot_id)
                     routes_with_spots[vehicle].append(spot_instance)
                 else:
-                    location_instance = Geo.objects.get(id=loc_id)
+                    location_instance = Geo.objects.get(geo_id=geo_id)
                     routes_with_spots[vehicle].append(location_instance)
         return routes_with_spots

@@ -2,8 +2,8 @@ import random
 
 
 class ChildMaker:
-    def __init__(self, location_to_spot, unchangeable_spots):
-        self.location_to_spot = location_to_spot
+    def __init__(self, geos_to_spot, unchangeable_spots):
+        self.geos_to_spot = geos_to_spot
         self.unchangeable_spots = unchangeable_spots
 
     def crossover(self, parent1, parent2):
@@ -12,7 +12,7 @@ class ChildMaker:
 
         stop1_changeable = False
         locations_tried_counter1 = 0
-        while not stop1_changeable and locations_tried_counter1 < len(self.location_to_spot):
+        while not stop1_changeable and locations_tried_counter1 < len(self.geos_to_spot):
             driver1 = random.choice(list(parent1.keys()))
             stop1_index = random.randint(2, len(parent1[driver1]) - 3)
             stop1 = parent1[driver1][stop1_index]
@@ -24,7 +24,7 @@ class ChildMaker:
 
         stop2_changeable = False
         locations_tried_counter2 = 0
-        while not stop2_changeable and locations_tried_counter2 < len(self.location_to_spot):
+        while not stop2_changeable and locations_tried_counter2 < len(self.geos_to_spot):
             driver2 = random.choice(list(parent2.keys()))
             stop2_index = random.randint(2, len(parent2[driver2]) - 3)
             stop2 = parent2[driver2][stop2_index]
