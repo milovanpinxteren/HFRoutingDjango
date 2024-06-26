@@ -2,9 +2,11 @@ import random
 
 
 class ChildMaker:
-    def __init__(self, geos_to_spot, unchangeable_spots):
-        self.geos_to_spot = geos_to_spot
-        self.unchangeable_spots = unchangeable_spots
+    def __init__(self, geos_to_spot, unchangeable_geos, operator_geo_dict):
+        self.geos_to_spot_len = len(geos_to_spot)
+        self.unchangeable_geos = unchangeable_geos
+        self.operator_geo_dict = operator_geo_dict
+
 
     def crossover(self, parent1, parent2):
         child1 = {k: v[:] for k, v in parent1.items()}
@@ -12,11 +14,11 @@ class ChildMaker:
 
         stop1_changeable = False
         locations_tried_counter1 = 0
-        while not stop1_changeable and locations_tried_counter1 < len(self.geos_to_spot):
+        while not stop1_changeable and locations_tried_counter1 < self.geos_to_spot_len:
             driver1 = random.choice(list(parent1.keys()))
             stop1_index = random.randint(2, len(parent1[driver1]) - 3)
             stop1 = parent1[driver1][stop1_index]
-            if stop1 not in self.unchangeable_spots:
+            if stop1 not in self.unchangeable_geos:
                 stop1_changeable = True
             else:
                 locations_tried_counter1 += 1
@@ -24,11 +26,11 @@ class ChildMaker:
 
         stop2_changeable = False
         locations_tried_counter2 = 0
-        while not stop2_changeable and locations_tried_counter2 < len(self.geos_to_spot):
+        while not stop2_changeable and locations_tried_counter2 < self.geos_to_spot_len:
             driver2 = random.choice(list(parent2.keys()))
             stop2_index = random.randint(2, len(parent2[driver2]) - 3)
             stop2 = parent2[driver2][stop2_index]
-            if stop2 not in self.unchangeable_spots:
+            if stop2 not in self.unchangeable_geos or stop2 in self.operator_geo_dict[driver1]:
                 stop2_changeable = True
             else:
                 locations_tried_counter2 += 1

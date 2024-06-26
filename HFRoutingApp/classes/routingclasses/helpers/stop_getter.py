@@ -33,9 +33,9 @@ class StopGetter:
     def get_stops_on_date(self, date):
         stops = {}
         catering_order_lines = CateringOrderLine.objects.select_related('catering_order__spot',
-                                                                        'catering_order__spot__geo').filter(
+                                                                        'catering_order__spot__location__geo').filter(
             catering_order__delivery_date=date)
-        picklist_lines = PickListLine.objects.select_related('spot', 'spot__geo').filter(distr_date=date)
+        picklist_lines = PickListLine.objects.select_related('spot', 'spot__location__geo').filter(distr_date=date)
         if not picklist_lines: #If the picklist is unkown -> Return all stops of all locations on date
             picklist_lines = self.get_stops_to_fill(date)
 
@@ -57,13 +57,13 @@ class StopGetter:
                 'removal_probability': prefix.removal_probability,
                 'notes': prefix.notes,
                 'location': {
-                    'locationID': prefix.geo.id,
-                    'shortcode': prefix.geo.shortcode,
-                    'description': prefix.geo.description,
-                    'notes': prefix.geo.notes,
-                    'opening_time': prefix.geo.opening_time,
-                    'address': prefix.geo.address,
-                    'geolocation': prefix.geo.geolocation,
+                    'locationID': prefix.location.geo.geo_id,
+                    'shortcode': prefix.shortcode,
+                    'description': prefix.description,
+                    'notes': prefix.notes,
+                    'opening_time': prefix.location.opening_time,
+                    'address': prefix.location.geo.address,
+                    'geolocation': prefix.location.geo.geolocation,
                 }
             }
             stops[prefix.id] = stop_info

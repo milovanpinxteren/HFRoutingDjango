@@ -1,7 +1,7 @@
 import random
 from collections import defaultdict
 
-from django.db.models import Sum, F
+from django.db.models import Count
 
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.child_maker import ChildMaker
@@ -13,36 +13,45 @@ from HFRoutingApp.models import Spot, Operator, OperatorGeoLink, Geo, Location
 class GeneticAlgorithm:
     def __init__(self):
         # Dict generators
-        self.spot_crates = {spot.id: spot.avg_no_crates for spot in Spot.objects.all()}
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
-        # self.location_to_spot = {spot.location.id: spot.id for spot in Spot.objects.all()}
-        self.geos_to_spot = {spot.location.geo_id: spot.id for spot in Spot.objects.all()}
-        self.unchangeable_spots = [link.geo_id for link in OperatorGeoLink.objects.all()]
+        self.operator_geo_dict = defaultdict(list)
+        operatorGeoLink_objects = OperatorGeoLink.objects.all()
+        for obj in operatorGeoLink_objects:
+            self.operator_geo_dict[obj.operator.id].append(obj.geo.geo_id)
+
+        self.geos_to_spot = {}
+        for spot in Spot.objects.select_related('location__geo').all():
+            geo_id = spot.location.geo_id
+            self.geos_to_spot.setdefault(geo_id, []).append(spot.id)
+        self.unchangeable_geos = [link.geo_id for link in OperatorGeoLink.objects.all()]
         self.location_opening_times = {location.geo_id: location.opening_time for location in Location.objects.all()}
         self.starting_times_dict = {operator.id: operator.starting_time for operator in Operator.objects.all()}
-        # self.spot_fill_times = {spot['location']: spot['total_time'] for spot in Spot.objects.values('location')
-        # .annotate(total_time=Sum(F('fill_time_minutes') + F('walking_time_minutes')))}
-
-        self.spot_fill_times = defaultdict(int)
         spots = Spot.objects.select_related('location__geo').all()
+        spot_counts = Spot.objects.values('location__geo').annotate(count=Count('id')).order_by()
+        spot_counts_dict = {item['location__geo']: item['count'] for item in spot_counts}
+        self.geo_avg_fill_times = defaultdict(float)
+        self.geo_avg_no_crates = defaultdict(float)
         for spot in spots:
             geo_id = spot.location.geo.geo_id
-            self.spot_fill_times[geo_id] += ((spot.fill_time_minutes or 0) + (spot.walking_time_minutes or 0))
+            self.geo_avg_fill_times[geo_id] += ((spot.fill_time_minutes or 0) + (spot.walking_time_minutes or 0)) / \
+                                               spot_counts_dict[geo_id]
+            self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 100
-        self.generations = 25
-        self.mutation_rate = 0.01
+        self.generations = 100
+        self.mutation_rate = 0.1
         self.elitism_count = 5
         self.tournament_size = 3
         self.travel_time_exceeded_penalty = 4000
         # Imports/inits
         self.route_utils = RouteUtils()
         self.distance_matrix = self.route_utils.get_distance_matrix()
-        self.ga_helpers = GeneticAlgorithmHelpers(self.geos_to_spot, self.unchangeable_spots)
-        self.fitness_evaluator = FitnessEvaluator(self.geos_to_spot, self.spot_crates, self.distance_matrix,
-                                                  self.vehicle_capacity, self.starting_times_dict, self.spot_fill_times,
+        self.ga_helpers = GeneticAlgorithmHelpers(self.geos_to_spot, self.unchangeable_geos, self.operator_geo_dict)
+        self.fitness_evaluator = FitnessEvaluator(self.geo_avg_no_crates, self.distance_matrix,
+                                                  self.vehicle_capacity, self.starting_times_dict,
+                                                  self.geo_avg_fill_times,
                                                   self.location_opening_times, self.travel_time_exceeded_penalty)
-        self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_spots)
+        self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_geos, self.operator_geo_dict)
 
     def tournament_selection(self):
         selected = []

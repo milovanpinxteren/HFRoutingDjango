@@ -3,7 +3,7 @@ from queue import PriorityQueue
 from HFRoutingApp.classes.routingclasses.helpers.calculate_cost_per_route import CalculateCostPerRoute
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.genetic_algorithm import GeneticAlgorithm
-from HFRoutingApp.models import Operator
+from HFRoutingApp.models import Operator, Hub, Spot
 
 
 class RouteExtender:
@@ -75,18 +75,27 @@ class RouteExtender:
                 queue.put(queue_tuple)
 
     def prepare_routes_for_map(self, routes, costs):
-        operators = Operator.objects.all()
-        operator_id_to_name = {operator.id: (f"{operator.user.first_name} {operator.user.last_name},"
-                                             f" km: {float(costs[operator.id] / 1000)}") for operator in operators}
+        # operators = Operator.objects.all()
+        # operator_id_to_name = {operator.id: (f"{operator.user.first_name} {operator.user.last_name},"
+        #                                      f" km: {float(costs[operator.id] / 1000)}") for operator in operators}
         new_dict = {}
         for operator_id, route in routes.items():
             spots_on_route = []
-            for spot in route:
-                try:
-                    spots_on_route.append({'name': spot.shortcode, 'address': spot.location.address,
-                                           'lon': spot.location.geolocation.lon, 'lat': spot.location.geolocation.lat})
-                except AttributeError:  # is location instead of spot (e.g. Hub, driver location)
-                    spots_on_route.append({'name': spot.shortcode, 'address': spot.address,
-                                           'lon': spot.geolocation.lon, 'lat': spot.geolocation.lat})
-            new_dict[operator_id_to_name[operator_id]] = spots_on_route
+            for stop in route:
+                if isinstance(stop, Operator):
+                    spots_on_route.append(
+                        {'name': stop.user.first_name + stop.user.last_name + 'km: ' + str(float(costs[stop.id] / 1000)),
+                         'address': stop.geo.address, 'lon': stop.geo.geolocation.lon, 'lat': stop.geo.geolocation.lat})
+                elif isinstance(stop, Hub):
+                    spots_on_route.append({'name': stop.shortcode, 'address': stop.geo.address,
+                                           'lon': stop.geo.geolocation.lon, 'lat': stop.geo.geolocation.lat})
+                elif isinstance(stop, Spot):
+                    spots_on_route.append({'name': stop.shortcode, 'address': stop.location.geo.address,
+                                           'lon': stop.location.geo.geolocation.lon,
+                                           'lat': stop.location.geo.geolocation.lat})
+                else:
+                    print('Not a operator, hub or spot')
+            operator = Operator.objects.get(id=operator_id)
+            key = operator.user.first_name + ' ' +  operator.user.last_name + ' km: ' + str(float(costs[operator_id] / 1000))
+            new_dict[key] = spots_on_route
         return new_dict

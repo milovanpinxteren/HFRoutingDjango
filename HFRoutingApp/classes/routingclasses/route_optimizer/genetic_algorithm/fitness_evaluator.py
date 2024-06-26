@@ -13,14 +13,13 @@ from datetime import datetime, timedelta
 # TODO implement: hard constraint: arrival time should not be prior to opening time of location
 
 class FitnessEvaluator:
-    def __init__(self, geos_to_spot, spot_crates, distance_matrix, vehicle_capacity, starting_times_dict,
-                 spot_fill_times, location_opening_times, travel_time_exceeded_penalty):
-        self.geos_to_spot = geos_to_spot
-        self.spot_crates = spot_crates
+    def __init__(self, geo_avg_no_crates, distance_matrix, vehicle_capacity, starting_times_dict,
+                 geo_avg_fill_times, location_opening_times, travel_time_exceeded_penalty):
+        self.geo_avg_no_crates = geo_avg_no_crates
         self.distance_matrix = distance_matrix
         self.vehicle_capacity = vehicle_capacity
         self.starting_times_dict = starting_times_dict
-        self.spot_fill_times = spot_fill_times
+        self.geo_avg_fill_times = geo_avg_fill_times
         self.location_opening_times = location_opening_times
         self.travel_time_exceeded_penalty = travel_time_exceeded_penalty
 
@@ -34,8 +33,7 @@ class FitnessEvaluator:
                     geo_id = route[i]
                     next_geo_id = route[i + 1]
                     try:
-                        spot_id = self.geos_to_spot[route[i]]
-                        total_load += self.spot_crates[spot_id]
+                        total_load += self.geo_avg_no_crates[geo_id]
                         if total_load <= self.vehicle_capacity[vehicle]:
                             route_travel_time += self.calculate_travel_time(geo_id, next_geo_id)
                             time_constraint_met = self.check_time_constraint(vehicle, geo_id, route_travel_time)
@@ -59,7 +57,7 @@ class FitnessEvaluator:
     def calculate_travel_time(self, geo_id, next_geo_id):
         distance_increase = self.distance_matrix[(geo_id, next_geo_id)]
         try:
-            time_to_add = self.spot_fill_times[geo_id] + (
+            time_to_add = self.geo_avg_fill_times[geo_id] + (
                         (distance_increase / 16.67) / 60)  # Assuming 60 km/h (16.67 m/s
         except Exception as e:
             print('Calculate travel time exception', e)
@@ -75,6 +73,5 @@ class FitnessEvaluator:
                 return True
             else:
                 return False
-        except Exception as e:
-            print('check time constraint exception', e)
+        except KeyError: #Key not found -> It is the driver or hub
             return True

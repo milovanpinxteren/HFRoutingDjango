@@ -1,17 +1,33 @@
 from django.db.models import Q, Sum, FloatField
 from django.db.models.functions import Coalesce
 
-from HFRoutingApp.models import DistanceMatrix, OperatorGeoLink, Spot
+from HFRoutingApp.models import DistanceMatrix, OperatorGeoLink, Spot, Geo
 
 
 class RouteUtils:
     def get_distance(self, origin, destination):
         try:
-            if hasattr(origin, 'location'):
-                origin = origin.location
-            if hasattr(destination, 'location'):
-                destination = destination.location
-            distance = DistanceMatrix.objects.get(Q(origin=origin) & Q(destination=destination)).distance_meters
+            if hasattr(origin, 'geo'):
+                origin_geo = origin.geo
+            elif isinstance(origin, Geo):
+                origin_geo = origin
+            elif isinstance(origin, Spot):
+                origin_geo = origin.location.geo
+            else:
+                print('STOP')
+
+            if hasattr(destination, 'geo'):
+                destination_geo = destination.geo
+            elif isinstance(destination, Geo):
+                destination_geo = destination
+            elif isinstance(destination, Spot):
+                destination_geo = destination.location.geo
+            else:
+                print('STOP')
+            try:
+                distance = DistanceMatrix.objects.get(Q(origin=origin_geo) & Q(destination=destination_geo)).distance_meters
+            except Exception as e:
+                print('FOUT')
         except DistanceMatrix.DoesNotExist:
             distance = float('inf')
         return distance
@@ -38,12 +54,12 @@ class RouteUtils:
     def get_mandatory_groups(self, operators):
         """
         Gets the locations linked to an operator, these locations have to be in the same route (because same operator)
-        :return: dict with operator id as key and [location_ids] as value
+        :return: dict with operator id as key and [geo_ids] as value
         """
         mandatory_groups = {}
         for operator in operators:
-            spot_ids = OperatorGeoLink.objects.filter(operator=operator).values_list('geo__location__spot', flat=True)
-            mandatory_groups[operator.id] = spot_ids
+            geo_ids = OperatorGeoLink.objects.filter(operator=operator).values_list('geo__geo_id', flat=True)
+            mandatory_groups[operator.id] = geo_ids
         return mandatory_groups
 
     def get_vehicle_capacities(self, operators):

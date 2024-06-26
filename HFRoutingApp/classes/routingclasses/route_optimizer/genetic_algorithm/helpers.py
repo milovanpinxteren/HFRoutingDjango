@@ -1,12 +1,14 @@
 import random
 
-from HFRoutingApp.models import Spot, Geo
+from HFRoutingApp.models import Spot, Geo, Hub, Operator
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class GeneticAlgorithmHelpers:
-    def __init__(self, geos_to_spot, unchangeable_spots):
+    def __init__(self, geos_to_spot, unchangeable_geos, operator_geo_dict):
         self.geos_to_spot = geos_to_spot
-        self.unchangeable_spots = unchangeable_spots
+        self.unchangeable_geos = unchangeable_geos
+        self.operator_geo_dict = operator_geo_dict
 
     def initialize_population(self, routes, population_size):
         population = []
@@ -16,7 +18,9 @@ class GeneticAlgorithmHelpers:
                 fixed_stops_start = route[:2]
                 fixed_stops_end = route[-2:]
                 # Intermediate stops that are not in the unchangeable_stops list
-                intermediate_stops = [stop for stop in route[2:-2] if stop not in self.unchangeable_spots]
+                # intermediate_stops = [stop for stop in route[2:-2] if stop not in self.unchangeable_geos]
+                # unchangable_stops = [stop for stop in route[2:-2] if stop in self.unchangeable_geos]
+                intermediate_stops = route[2:-2]
 
                 random.shuffle(intermediate_stops)
 
@@ -26,13 +30,28 @@ class GeneticAlgorithmHelpers:
         return population
 
     def mutate(self, child):
-        driver1 = random.choice(list(child.keys()))
-        stop1_index = random.randint(2, len(child[driver1]) - 3)
-        stop = child[driver1].pop(stop1_index)
+        max_attempts = 5  # Add a limit to the number of attempts to prevent an infinite loop
+        attempts = 0
+        stop = None
 
-        driver2 = random.choice(list(child.keys()))
-        stop2_index = random.randint(2, len(child[driver2]) - 3)
-        child[driver2].insert(stop2_index, stop)
+        while attempts < max_attempts and stop is None:
+            attempts += 1
+            driver1 = random.choice(list(child.keys()))
+            stop1_index = random.randint(2, len(child[driver1]) - 3)
+            driver2 = random.choice(list(child.keys()))
+            stop2_index = random.randint(2, len(child[driver2]) - 3)
+
+            stop_candidate = child[driver1][stop1_index]
+
+            if stop_candidate not in self.unchangeable_geos or stop_candidate in self.operator_geo_dict[driver2]:
+                stop = child[driver1].pop(stop1_index)
+
+            if stop:
+                if child[driver2][stop2_index] not in self.unchangeable_geos or child[driver2][stop2_index] in self.operator_geo_dict[driver1]:
+                    child[driver2].insert(stop2_index, stop)
+                else:
+                    child[driver1].insert(stop1_index, stop)
+
         return child
 
     def reverse_transform_routes(self, transformed_routes):
@@ -40,11 +59,20 @@ class GeneticAlgorithmHelpers:
         for vehicle, geos in transformed_routes.items():
             routes_with_spots[vehicle] = []
             for geo_id in geos:
-                spot_id = self.geos_to_spot.get(geo_id)
-                if spot_id is not None:
-                    spot_instance = Spot.objects.get(id=spot_id)
-                    routes_with_spots[vehicle].append(spot_instance)
-                else:
-                    location_instance = Geo.objects.get(geo_id=geo_id)
-                    routes_with_spots[vehicle].append(location_instance)
+                try:
+                    spot_ids = list(self.geos_to_spot[geo_id])
+                    spot_id = spot_ids.pop()
+                    instance = Spot.objects.get(id=spot_id)
+                    self.geos_to_spot[geo_id] = spot_ids
+                except KeyError: #Could be a hub or driver
+                    try:
+                        instance = Hub.objects.get(geo__geo_id=geo_id)
+                    except ObjectDoesNotExist: #Is a driver
+                        instance = Operator.objects.get(geo__geo_id=geo_id)
+                except Exception as e:
+                    print('Reverse transform route Exception: ', e)
+                    instance = None
+                if instance is not None:
+                    routes_with_spots[vehicle].append(instance)
+
         return routes_with_spots

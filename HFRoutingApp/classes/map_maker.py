@@ -40,8 +40,8 @@ class MapMaker:
         {{% macro html(this, kwargs) %}}
         <div style="
             position: fixed; 
-            bottom: 13px;
-            right: 0;
+            bottom: 5px;
+            left: 0;
             width: 250px;
             height: {height}px; 
             border:1px solid grey;

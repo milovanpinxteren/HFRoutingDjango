@@ -1,10 +1,10 @@
 .route-response {
-    max-width: 25%;
+    max-width: 15%;
     float: left;
 }
 
 .map-div {
-    width: 75%;
+    width: 85%;
     float: right;
 }
 
@@ -16,12 +16,12 @@
 
 .left-container {
     padding: 1px;
-    width: 25%;
+    width: 20%;
     min-height: 470px;
 }
 
 .right-container {
     padding: 1px;
-    width: 75%;
+    width: 80%;
     min-height: 470px;
 }

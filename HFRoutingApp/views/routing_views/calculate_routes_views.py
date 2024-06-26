@@ -9,25 +9,25 @@ from HFRoutingApp.classes.routingclasses.helpers.stop_getter import StopGetter
 
 @login_required
 def calculate_routes_for_date(request):
-    try:
-        print('calculate for dates')
-        stop_getter = StopGetter()
-        date = request.GET.get('date', None)
-        stops = stop_getter.get_stops_on_date(date)
+    # try:
+    print('calculate for dates')
+    stop_getter = StopGetter()
+    date = request.GET.get('date', None)
+    stops = stop_getter.get_stops_on_date(date)
 
-        mandatory_route_maker = MandatoryRouteMaker()
-        route_extender = RouteExtender()
-        map_maker = MapMaker()
-        print('making mandatory routes', stops)
-        routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops, date)
-        extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
-        #TODO: DECISION MAKING: check if removing last hub significantly decreases travel (allow last hub to be removed)
-        routes_map = map_maker.make_map(extended_routes, 'routes')
+    mandatory_route_maker = MandatoryRouteMaker()
+    route_extender = RouteExtender()
+    map_maker = MapMaker()
+    print('making mandatory routes', stops)
+    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops, date)
+    extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
+    #TODO: DECISION MAKING: check if removing last hub significantly decreases travel (allow last hub to be removed)
+    routes_map = map_maker.make_map(extended_routes, 'routes')
 
-        context = {'routes': True, 'map': routes_map._repr_html_()}
-    except Exception as e:
-        print(e)
-        context = {'routes': False, 'message': e}
+    context = {'routes': True, 'map': routes_map._repr_html_()}
+    # except Exception as e:
+    #     print(e)
+    #     context = {'routes': False, 'message': e}
     return render(request, 'routes/routes_overview.html', context)
 
 
