@@ -7,6 +7,21 @@ from HFRoutingApp.classes.routingclasses.cluster_maker import ClusterMaker
 from HFRoutingApp.classes.routingclasses.helpers.stop_getter import StopGetter
 
 
+
+def generate_start_route_for_tuner(date):
+    print('Gen for tuner')
+    stop_getter = StopGetter()
+    stops = stop_getter.get_stops_on_date(date)
+
+    mandatory_route_maker = MandatoryRouteMaker()
+    route_extender = RouteExtender()
+    map_maker = MapMaker()
+    print('making mandatory routes', stops)
+    routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops, date)
+    extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
+    return extended_routes
+
+
 @login_required
 def calculate_routes_for_date(request):
     # try:

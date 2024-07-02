@@ -20,6 +20,10 @@ class RouteExtender:
         print('inserting')
         inserted_routes = self.insert_spots(queues, routes, updated_capacities)
         print('to GA')
+        print(inserted_routes)
+        # return inserted_routes
+        #TODO: Uncomment after Tuner is done
+
         optimized_routes = self.genetic_algorithm.do_evolution(inserted_routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)

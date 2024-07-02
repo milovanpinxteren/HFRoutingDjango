@@ -37,11 +37,11 @@ class GeneticAlgorithm:
                                                spot_counts_dict[geo_id]
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
-        self.population_size = 100
-        self.generations = 100
-        self.mutation_rate = 0.1
+        self.population_size = 150
+        self.generations = 1300
+        self.mutation_rate = 0.2
         self.elitism_count = 5
-        self.tournament_size = 3
+        self.tournament_size = 5
         self.travel_time_exceeded_penalty = 4000
         # Imports/inits
         self.route_utils = RouteUtils()
@@ -94,24 +94,24 @@ class GeneticAlgorithm:
                     vehicle_array.append(stop.location.geo_id)
             transformed_routes[vehicle] = vehicle_array
         # transformed_routes = {}
-        print('original')
+        # print('original')
         original_len = 0
         for operator, route in transformed_routes.items():
-            print('route for ', operator, 'is length: ', len(route))
+            # print('route for ', operator, 'is length: ', len(route))
             original_len += len(route)
-        print(original_len)
-        print(transformed_routes)
+        # print(original_len)
+        # print(transformed_routes)
         self.population = self.ga_helpers.initialize_population(transformed_routes, self.population_size)
         global_best = {}
         global_best_fitness = float('inf')
         for generation in range(self.generations):
             self.evolve()
-            print(min(self.population, key=self.fitness_evaluator.fitness))
+            # print(min(self.population, key=self.fitness_evaluator.fitness))
             generational_best = min(self.population, key=self.fitness_evaluator.fitness)
             generational_best_fitness = self.fitness_evaluator.fitness(generational_best)
-            print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
+            # print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
             if generational_best_fitness < global_best_fitness:
-                print('New world record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
+                # print('New world record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
                 global_best = generational_best
                 global_best_fitness = generational_best_fitness
 

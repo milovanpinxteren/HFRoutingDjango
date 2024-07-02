@@ -56,23 +56,34 @@ class GeneticAlgorithmHelpers:
 
     def reverse_transform_routes(self, transformed_routes):
         routes_with_spots = {}
+        # print('GEOS TO SPOT')
+        # print(self.geos_to_spot)
         for vehicle, geos in transformed_routes.items():
             routes_with_spots[vehicle] = []
             for geo_id in geos:
                 try:
                     spot_ids = list(self.geos_to_spot[geo_id])
-                    spot_id = spot_ids.pop()
+                    if len(spot_ids) > 1:
+                        spot_id = spot_ids.pop()
+                    else:
+                        spot_id = spot_ids[0]
                     instance = Spot.objects.get(id=spot_id)
                     self.geos_to_spot[geo_id] = spot_ids
-                except KeyError: #Could be a hub or driver
+                except (IndexError, KeyError) as e: #Could be a hub or driver
+                    # print('Error: ',e)
                     try:
                         instance = Hub.objects.get(geo__geo_id=geo_id)
                     except ObjectDoesNotExist: #Is a driver
-                        instance = Operator.objects.get(geo__geo_id=geo_id)
+                        try:
+                            instance = Operator.objects.get(geo__geo_id=geo_id)
+                        except ObjectDoesNotExist:
+                            print('No spot, hub, operator found for: ', geo_id)
                 except Exception as e:
                     print('Reverse transform route Exception: ', e)
                     instance = None
                 if instance is not None:
                     routes_with_spots[vehicle].append(instance)
+                elif instance is None:
+                    print('could not convert geo to spot/hub/operator')
 
         return routes_with_spots
