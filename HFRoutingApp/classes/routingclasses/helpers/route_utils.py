@@ -41,6 +41,19 @@ class RouteUtils:
             distance_matrix[key] = value
         return distance_matrix
 
+    def get_distance_matrix_with_double_keys(self):
+        distance_matrix = {}
+        distances = DistanceMatrix.objects.all()
+        for distance in distances:
+            origin_id = distance.origin.geo_id
+            destination_id = distance.destination.geo_id
+            value = distance.distance_meters
+            if origin_id not in distance_matrix:
+                distance_matrix[origin_id] = {}
+
+            distance_matrix[origin_id][destination_id] = value
+        return distance_matrix
+
     def get_nearest_location(self, current_location, locations):
         nearest_location = None
         shortest_distance = float('inf')

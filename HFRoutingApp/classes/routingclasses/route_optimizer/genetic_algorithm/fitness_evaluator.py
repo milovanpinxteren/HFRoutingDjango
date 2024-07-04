@@ -55,7 +55,7 @@ class FitnessEvaluator:
             return float("inf")
 
     def calculate_travel_time(self, geo_id, next_geo_id):
-        distance_increase = self.distance_matrix[(geo_id, next_geo_id)]
+        distance_increase = self.distance_matrix[geo_id][next_geo_id]
         try:
             time_to_add = self.geo_avg_fill_times[geo_id] + (
                         (distance_increase / 16.67) / 60)  # Assuming 60 km/h (16.67 m/s

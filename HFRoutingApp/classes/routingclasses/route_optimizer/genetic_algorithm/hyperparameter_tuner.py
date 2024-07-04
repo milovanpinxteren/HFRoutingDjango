@@ -56,7 +56,7 @@ def evaluate_ga(params, routes):
     ga = GeneticAlgorithm()
     cost_calculator = CalculateCostPerRoute()
     ga.population_size = params['population_size']
-    ga.generations = params['generations']
+    # ga.generations = params['generations']
     ga.mutation_rate = params['mutation_rate']
     ga.elitism_count = params['elitism_count']
     ga.tournament_size = params['tournament_size']
@@ -72,11 +72,11 @@ def evaluate_ga(params, routes):
 
 # Define the hyperparameter space
 hyperparameter_space = {
-    'population_size': list(range(50, 250, 50)),
-    'generations': list(range(100, 1500, 400)),
-    'mutation_rate': [0 + 0.1 * i for i in range(int((0.4 - 0) / 0.1))],
-    'elitism_count': list(range(1, 10, 4)),
-    'tournament_size': list(range(1, 6, 2))
+    'population_size': list(range(70, 151, 20)),
+    # 'generations': list(range(100, 1500, 400)),
+    'mutation_rate': [0 + 0.05 * i for i in range(int((0.4 - 0) / 0.05))],
+    'elitism_count': list(range(5, 12, 1)),
+    'tournament_size': list(range(4, 8, 2))
 }
 
 # Create the tuner and perform grid search
