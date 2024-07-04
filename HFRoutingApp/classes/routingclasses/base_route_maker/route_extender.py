@@ -3,6 +3,7 @@ from queue import PriorityQueue
 from HFRoutingApp.classes.routingclasses.helpers.calculate_cost_per_route import CalculateCostPerRoute
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.genetic_algorithm import GeneticAlgorithm
+from HFRoutingApp.classes.routingclasses.route_optimizer.group_assigner import GroupAssigner
 from HFRoutingApp.models import Operator, Hub, Spot
 
 
@@ -11,8 +12,10 @@ class RouteExtender:
         self.route_utils = RouteUtils()
         self.cost_calculator = CalculateCostPerRoute()
         self.genetic_algorithm = GeneticAlgorithm()
+        self.group_assigner = GroupAssigner()
 
     def extend_route(self, routes, remaining_spots, operators):
+        routes, remaining_spots = self.group_assigner.assign_groups(routes, remaining_spots, operators)
         print('extending')
         queues = self.create_queues(operators, remaining_spots)
         capacities = self.route_utils.get_vehicle_capacities(operators)
@@ -57,6 +60,17 @@ class RouteExtender:
                         routes[operator.id] = routes[operator.id][:-2] + [spot] + routes[operator.id][-2:]
                         capacities[operator.id] -= spot.avg_no_crates
                         self.remove_spot_from_all_queues(queues, spot)
+                        spots_nearby = True
+                        # while spots_nearby:
+                        #     cost, _, spot = queue.get()
+                        #     if cost <= 15000:
+                        #         if capacities[operator.id] > (float(spot.avg_no_crates) if spot.avg_no_crates else 0):
+                        #             routes[operator.id] = routes[operator.id][:-2] + [spot] + routes[operator.id][-2:]
+                        #             capacities[operator.id] -= spot.avg_no_crates
+                        #             self.remove_spot_from_all_queues(queues, spot)
+                        #     elif cost > 15000:
+                        #         spots_nearby = False
+
                         operators_tried = 0
                     else:
                         operators_tried += 1

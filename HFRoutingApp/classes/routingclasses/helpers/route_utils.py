@@ -25,7 +25,8 @@ class RouteUtils:
             else:
                 print('STOP')
             try:
-                distance = DistanceMatrix.objects.get(Q(origin=origin_geo) & Q(destination=destination_geo)).distance_meters
+                distance = DistanceMatrix.objects.get(
+                    Q(origin=origin_geo) & Q(destination=destination_geo)).distance_meters
             except Exception as e:
                 print('FOUT')
         except DistanceMatrix.DoesNotExist:
@@ -45,14 +46,53 @@ class RouteUtils:
         distance_matrix = {}
         distances = DistanceMatrix.objects.all()
         for distance in distances:
-            origin_id = distance.origin.geo_id
-            destination_id = distance.destination.geo_id
-            value = distance.distance_meters
-            if origin_id not in distance_matrix:
-                distance_matrix[origin_id] = {}
+            if ((len(distance.origin.location_set.filter(active=True)) > 0
+                 or len(distance.origin.hub_set.filter(active=True)) > 0
+                 or len(distance.origin.operator_set.filter(active=True)) > 0)
+            and (len(distance.destination.location_set.filter(active=True))
+                 or len(distance.destination.hub_set.filter(active=True)) > 0
+                 or len(distance.destination.operator_set.filter(active=True)) > 0)):
 
-            distance_matrix[origin_id][destination_id] = value
+                origin_id = distance.origin.geo_id
+                destination_id = distance.destination.geo_id
+                value = distance.distance_meters
+                if origin_id not in distance_matrix:
+                    distance_matrix[origin_id] = {}
+                distance_matrix[origin_id][destination_id] = value
+
         return distance_matrix
+
+    # def get_distance_matrix_with_double_keys(self):
+    #     distance_matrix = {}
+    #     distances = DistanceMatrix.objects.all()
+    #     for distance in distances:
+    #         if len(distance.origin.location_set.filter(active=True)) > 0 and len(
+    #                 distance.destination.location_set.filter(active=True)) > 0:
+    #             origin_id = distance.origin.geo_id
+    #             destination_id = distance.destination.geo_id
+    #             value = distance.distance_meters
+    #             if origin_id not in distance_matrix:
+    #                 distance_matrix[origin_id] = {}
+    #             distance_matrix[origin_id][destination_id] = value
+    #         elif len(distance.origin.hub_set.filter(active=True)) > 0 and len(
+    #                 distance.destination.hub_set.filter(active=True)) > 0:
+    #             origin_id = distance.origin.geo_id
+    #             destination_id = distance.destination.geo_id
+    #             value = distance.distance_meters
+    #             if origin_id not in distance_matrix:
+    #                 distance_matrix[origin_id] = {}
+    #             distance_matrix[origin_id][destination_id] = value
+    #         elif len(distance.origin.operator_set.filter(active=True)) > 0 and len(
+    #                 distance.destination.operator_set.filter(active=True)) > 0:
+    #             origin_id = distance.origin.geo_id
+    #             destination_id = distance.destination.geo_id
+    #             value = distance.distance_meters
+    #             if origin_id not in distance_matrix:
+    #                 distance_matrix[origin_id] = {}
+    #             distance_matrix[origin_id][destination_id] = value
+    #
+    #
+    #     return distance_matrix
 
     def get_nearest_location(self, current_location, locations):
         nearest_location = None
@@ -86,7 +126,7 @@ class RouteUtils:
         for operator_id, route in routes.items():
             # location_ids = [geo.location.id for geo in route]
             location_ids = [loc.id for geo in route for loc in geo.location_set.all() if loc is not None]
-            total_avg_no_crates = Spot.objects.filter(location_id__in=location_ids).aggregate(total=Coalesce(Sum('avg_no_crates'), 0, output_field=FloatField()))['total']
+            total_avg_no_crates = Spot.objects.filter(location_id__in=location_ids).aggregate(
+                total=Coalesce(Sum('avg_no_crates'), 0, output_field=FloatField()))['total']
             updated_capacities[operator_id] = capacities[operator_id] - total_avg_no_crates
         return updated_capacities
-
