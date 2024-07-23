@@ -60,7 +60,7 @@ class RouteExtender:
                         routes[operator.id] = routes[operator.id][:-2] + [spot] + routes[operator.id][-2:]
                         capacities[operator.id] -= spot.avg_no_crates
                         self.remove_spot_from_all_queues(queues, spot)
-                        spots_nearby = True
+                        # spots_nearby = True
                         # while spots_nearby:
                         #     cost, _, spot = queue.get()
                         #     if cost <= 15000:

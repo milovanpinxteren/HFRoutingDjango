@@ -40,33 +40,36 @@ class StopGetter:
             picklist_lines = self.get_stops_to_fill(date)
 
         for obj in chain(catering_order_lines, picklist_lines):
-            if obj.__class__.__name__ == 'CateringOrderLine':
-                prefix = obj.catering_order.spot
-                quantity = obj.quantity
-            elif obj.__class__.__name__ == 'PickListLine':
-                prefix = obj.spot
-                quantity = obj.quantity
-            elif obj.__class__.__name__ == 'Spot':
-                prefix = obj
-                quantity = obj.avg_no_crates
-            stop_info = {
-                'quantity': quantity,
-                'pilot': prefix.pilot,
-                'fill_time': prefix.fill_time_minutes,
-                'walking_time': prefix.walking_time_minutes,
-                'removal_probability': prefix.removal_probability,
-                'notes': prefix.notes,
-                'location': {
-                    'locationID': prefix.location.geo.geo_id,
-                    'shortcode': prefix.shortcode,
-                    'description': prefix.description,
+            try:
+                if obj.__class__.__name__ == 'CateringOrderLine':
+                    prefix = obj.catering_order.spot
+                    quantity = obj.quantity
+                elif obj.__class__.__name__ == 'PickListLine':
+                    prefix = obj.spot
+                    quantity = obj.quantity
+                elif obj.__class__.__name__ == 'Spot':
+                    prefix = obj
+                    quantity = obj.avg_no_crates
+                stop_info = {
+                    'quantity': quantity,
+                    'pilot': prefix.pilot,
+                    'fill_time': prefix.fill_time_minutes,
+                    'walking_time': prefix.walking_time_minutes,
+                    'removal_probability': prefix.removal_probability,
                     'notes': prefix.notes,
-                    'opening_time': prefix.location.opening_time,
-                    'address': prefix.location.geo.address,
-                    'geolocation': prefix.location.geo.geolocation,
+                    'location': {
+                        'locationID': prefix.location.geo.geo_id,
+                        'shortcode': prefix.shortcode,
+                        'description': prefix.description,
+                        'notes': prefix.notes,
+                        'opening_time': prefix.location.opening_time,
+                        'address': prefix.location.geo.address,
+                        'geolocation': prefix.location.geo.geolocation,
+                    }
                 }
-            }
-            stops[prefix.id] = stop_info
+                stops[prefix.id] = stop_info
+            except Exception as e:
+                print(e)
         return {
             'date': date,
             'stops': stops,
