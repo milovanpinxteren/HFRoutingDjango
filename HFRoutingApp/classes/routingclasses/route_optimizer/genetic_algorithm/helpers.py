@@ -3,11 +3,14 @@ import random
 
 from HFRoutingApp.models import Spot, Geo, Hub, Operator
 from django.core.exceptions import ObjectDoesNotExist
-from math import radians, sin, cos, sqrt, atan2
+import copy
 
 
 class GeneticAlgorithmHelpers:
-    def __init__(self, geos_to_spot, unchangeable_geos, operator_geo_dict, geo_coordinates, distance_matrix):
+    def __init__(self, geos_to_spot, unchangeable_geos, operator_geo_dict, geo_coordinates, distance_matrix,
+                 geo_avg_no_crates, vehicle_capacity):
+        self.geo_avg_no_crates = geo_avg_no_crates
+        self.vehicle_capacity = vehicle_capacity
         self.geos_to_spot = geos_to_spot
         self.unchangeable_geos = unchangeable_geos
         self.operator_geo_dict = operator_geo_dict
@@ -28,10 +31,11 @@ class GeneticAlgorithmHelpers:
                 population.append(individual)
         return population
 
-    def find_furthest_geo(self, child):  # returns geo of the stop which is furthest away from the other stops in all routes
+    def find_furthest_geo(self, child):  # returns geo of the stop which is furthest from the other stops in all routes
         max_distance_to_stops = -1
         furthest_driver_id = None
         furthest_geo_id = None
+        furthest_geo_index = None
         for driver_id, geo_ids in child.items():
             for index1, geo_id in enumerate(geo_ids):  # each location
                 total_distance_to_stops = 0  # The total distance from a location to every other location in the route
@@ -46,6 +50,8 @@ class GeneticAlgorithmHelpers:
                                 furthest_driver_id = driver_id
                                 furthest_geo_id = geo_id
                                 furthest_geo_index = index1
+        if furthest_geo_index == None:
+            print('error in find_furthest_geo')
         return furthest_driver_id, furthest_geo_id, furthest_geo_index
 
     def find_middle_point(self, route):
@@ -80,7 +86,7 @@ class GeneticAlgorithmHelpers:
             if key in excluded_array:
                 continue  # If the key is already in the route
             closest_geo = key  # If the key is not already in the route (potential swap)
-            #If driver_id = 0, it only wants to find the closest geo and not swap the closest geo. Therefore the geo is allowed to be in unchangeable
+            # If driver_id = 0, it only wants to find the closest geo and not swap the closest geo. Therefore the geo is allowed to be in unchangeable
             if closest_geo not in self.unchangeable_geos or closest_geo in self.operator_geo_dict.get(
                     furthest_driver_id, []) or furthest_driver_id == 0:
                 if value < min_value:
@@ -89,7 +95,15 @@ class GeneticAlgorithmHelpers:
 
         return min_key, min_value
 
-    def mutate(self, child):
+    def mutate(self, child, mutation_type):
+        if mutation_type == 'remove_furthest':
+            child = self.remove_furthest_mutation(child)
+        elif mutation_type == 'remove_high_capacities':
+            child = self.remove_high_capacity_mutation(child)
+
+        return child
+
+    def remove_furthest_mutation(self, child):
         # try:
         inserted = False
         driver_id_to_swap, geo_id_to_swap, geo_index_to_swap = self.find_furthest_geo(child)
@@ -98,14 +112,13 @@ class GeneticAlgorithmHelpers:
         middle_point = self.find_middle_point(route_without_stop)
         dists_geo_to_swap = self.distance_matrix[middle_point]  # dict of all geo_ids: distances from the furthest geo
         closest_geo, min_value = self.find_closest_geo(driver_id_to_swap, dists_geo_to_swap,
-                                                       child[driver_id_to_swap])
+                                                       child[driver_id_to_swap])  # The closest geo to the middle point
 
         # find closest geo to furthest_geo_id
         dists_geo_to_swap_with = self.distance_matrix[geo_id_to_swap]
         closest_geo_to_assign, min_value_to_assign = self.find_closest_geo(0, dists_geo_to_swap_with,
-                                                                                 child[driver_id_to_swap])
+                                                                           child[driver_id_to_swap])
         # assign furthest_geo_id to route with closest geo
-
         if min_value != float("inf") and min_value_to_assign != float("inf"):
             child[driver_id_to_swap][geo_index_to_swap] = closest_geo
 
@@ -116,43 +129,75 @@ class GeneticAlgorithmHelpers:
                             child[driver_id_to_assign].insert(geo_index_to_assign, geo_id_to_swap)
                             inserted = True
                         elif inserted:
+                            child = self.routes_sorter(child)
                             return child
 
         else:
             print('No close stops found, not mutating')
+        child = self.routes_sorter(child)
         return child
         # except Exception as e:
         #     print('mutate exception: ', e)
 
-    # def mutate(self, child):
-    #     max_attempts = 5  # Add a limit to the number of attempts to prevent an infinite loop
-    #     attempts = 0
-    #     stop = None
-    #
-    #     while attempts < max_attempts and stop is None:
-    #         attempts += 1
-    #         driver1 = random.choice(list(child.keys()))
-    #         stop1_index = random.randint(2, len(child[driver1]) - 3)
-    #         driver2 = random.choice(list(child.keys()))
-    #         stop2_index = random.randint(2, len(child[driver2]) - 3)
-    #
-    #         stop_candidate = child[driver1][stop1_index]
-    #
-    #         if stop_candidate not in self.unchangeable_geos or stop_candidate in self.operator_geo_dict[driver2]:
-    #             stop = child[driver1].pop(stop1_index)
-    #
-    #         if stop:
-    #             if child[driver2][stop2_index] not in self.unchangeable_geos or child[driver2][stop2_index] in self.operator_geo_dict[driver1]:
-    #                 child[driver2].insert(stop2_index, stop)
-    #             else:
-    #                 child[driver1].insert(stop1_index, stop)
-    #
-    #     return child
+    def remove_high_capacity_mutation(self, child):
+        operator_array = []
+        middles_array = []
+        assignment_needed = []
+        for operator, route in child.items():
+            operator_capacity = self.vehicle_capacity[operator]
+            total_route_load = 0
+            middle_geo = self.find_middle_point(route)
+            operator_array.append(operator)
+            middles_array.append(middle_geo)
+            for index, geo_id in enumerate(route):
+                handled_capacity_overflow = False
+                total_route_load += self.geo_avg_no_crates[geo_id]
+                if total_route_load > operator_capacity:
+                    print('overload:', operator, route)
+                    copied_route = route.copy()
+                    while not handled_capacity_overflow:
+                        furthest_driver_id, furthest_geo_id, furthest_geo_index = self.find_furthest_geo(
+                            {operator: copied_route})
+                        if (total_route_load - self.geo_avg_no_crates[furthest_geo_id]) < operator_capacity and furthest_geo_id not in self.unchangeable_geos:
+                            child[furthest_driver_id].remove(furthest_geo_id)
+                            handled_capacity_overflow = True
+                            assignment_needed.append(furthest_geo_id)
+                        else:
+                            copied_route.remove(furthest_geo_id)
+                elif len(assignment_needed) > 0:
+                    if (total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) < operator_capacity and \
+                            geo_id not in self.unchangeable_geos:
+                        child[operator].insert(index, assignment_needed[0])
+                        assignment_needed.pop(0)
+
+        return child
+
+    def routes_sorter(self, routes):
+        new_routes = {}
+        for driver_id, geo_ids in routes.items():
+            route = geo_ids[:2]
+            remaining_geo_ids = geo_ids[2:-2]
+            while remaining_geo_ids:
+                last_geo_id = route[-1]
+                nearest_neighbour = None
+                nearest_distance = float('inf')
+
+                for other_geo_id in remaining_geo_ids:
+                    distance = self.distance_matrix[last_geo_id][other_geo_id]
+                    if 0 < distance < nearest_distance or other_geo_id == last_geo_id:
+                        nearest_distance = distance
+                        nearest_neighbour = other_geo_id
+
+                if nearest_neighbour is not None:
+                    route.append(nearest_neighbour)
+                    remaining_geo_ids.remove(nearest_neighbour)
+
+            route.extend(geo_ids[-2:])
+            new_routes[driver_id] = route
+        return new_routes
 
     def reverse_transform_routes(self, transformed_routes):
         routes_with_spots = {}
-        # print('GEOS TO SPOT')
-        # print(self.geos_to_spot)
         for vehicle, geos in transformed_routes.items():
             routes_with_spots[vehicle] = []
             for geo_id in geos:
@@ -165,7 +210,6 @@ class GeneticAlgorithmHelpers:
                     instance = Spot.objects.get(id=spot_id)
                     self.geos_to_spot[geo_id] = spot_ids
                 except (IndexError, KeyError) as e:  # Could be a hub or driver
-                    # print('Error: ',e)
                     try:
                         instance = Hub.objects.get(geo__geo_id=geo_id)
                     except ObjectDoesNotExist:  # Is a driver
