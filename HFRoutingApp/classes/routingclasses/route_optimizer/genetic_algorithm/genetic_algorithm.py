@@ -49,8 +49,8 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 110
-        self.generations = 200 #1300
-        self.mutation_rate = 0.4 #0.2
+        self.generations = 200  # 1300
+        self.mutation_rate = 0.4  # 0.2
         self.elitism_count = 8
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
@@ -64,7 +64,8 @@ class GeneticAlgorithm:
                                                   self.vehicle_capacity, self.starting_times_dict,
                                                   self.geo_avg_fill_times,
                                                   self.location_opening_times, self.travel_time_exceeded_penalty)
-        self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_geos, self.operator_geo_dict)
+        self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_geos, self.operator_geo_dict,
+                                      self.distance_matrix, self.geo_avg_no_crates)
 
     def tournament_selection(self):
         selected = []
@@ -85,15 +86,15 @@ class GeneticAlgorithm:
         while len(new_population) < self.population_size:
             parent1, parent2 = self.tournament_selection()
             # try:
-            child1, child2 = self.child_maker.crossover(parent1, parent2)
+            child1 = self.child_maker.crossover(parent1, parent2)
             if random.random() < self.mutation_rate:
                 child1 = self.ga_helpers.mutate(child1, self.mutation_type)
-                child2 = self.ga_helpers.mutate(child2, self.mutation_type)
+                # child2 = self.ga_helpers.mutate(child2, self.mutation_type)
             # except Exception as e:
             #     print('Evolution error: ', e)
             #     child1, child2 = parent1, parent2
 
-            new_population.extend([child1, child2])
+            new_population.extend([child1])
         self.population = new_population
 
     def do_evolution(self, routes):
