@@ -162,6 +162,9 @@ class GeneticAlgorithmHelpers:
                             child[furthest_driver_id].remove(furthest_geo_id)
                             handled_capacity_overflow = True
                             assignment_needed.append(furthest_geo_id)
+                        elif furthest_geo_index == None:
+                            print('could not handle capacity overflow')
+                            return child
                         else:
                             copied_route.remove(furthest_geo_id)
                 elif len(assignment_needed) > 0:

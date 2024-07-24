@@ -48,12 +48,14 @@ class GeneticAlgorithm:
                                                spot_counts_dict[geo_id]
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
-        self.population_size = 110
-        self.generations = 200  # 1300
-        self.mutation_rate = 0.4  # 0.2
+        self.population_size = 40
+        self.generations = 50  # 1300
+        self.mutation_rate = 1  # 0.2
+        self.crossover_rate = 0.5
         self.elitism_count = 8
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
+        self.infeasible_childs_counter = 0
         # Imports/inits
         self.route_utils = RouteUtils()
         self.distance_matrix = self.route_utils.get_distance_matrix_with_double_keys()
@@ -65,7 +67,8 @@ class GeneticAlgorithm:
                                                   self.geo_avg_fill_times,
                                                   self.location_opening_times, self.travel_time_exceeded_penalty)
         self.child_maker = ChildMaker(self.geos_to_spot, self.unchangeable_geos, self.operator_geo_dict,
-                                      self.distance_matrix, self.geo_avg_no_crates)
+                                      self.distance_matrix, self.geo_avg_no_crates, self.vehicle_capacity,
+                                      self.ga_helpers)
 
     def tournament_selection(self):
         selected = []
@@ -82,19 +85,30 @@ class GeneticAlgorithm:
         self.selection_probabilities = [(i + 1) / self.total_ranks for i in
                                         range(len(self.ranked_population) - self.elitism_count)]
         new_population = []
+        self.mutation_type = 'remove_high_capacities'
+        if self.infeasible_childs_counter < self.population_size / 2:
+            self.mutation_type = 'remove_furthest'
+        else:
+            self.mutation_type = 'remove_high_capacities'
+        self.infeasible_childs_counter = 0
         new_population.extend(self.elites)
         while len(new_population) < self.population_size:
             parent1, parent2 = self.tournament_selection()
-            # try:
-            child1 = self.child_maker.crossover(parent1, parent2)
-            if random.random() < self.mutation_rate:
-                child1 = self.ga_helpers.mutate(child1, self.mutation_type)
-                # child2 = self.ga_helpers.mutate(child2, self.mutation_type)
-            # except Exception as e:
-            #     print('Evolution error: ', e)
-            #     child1, child2 = parent1, parent2
+            self.mutation_type = 'remove_high_capacities'
+            if self.mutation_type == 'remove_high_capacities':
+                child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
+            else:
+                child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
+                # child1 = self.child_maker.crossover(child1, self.crossover_type) #36573
+            child_fitness = self.fitness_evaluator.fitness(child1)
+            print("child fitness", child_fitness)
+            if child_fitness == float("inf"):
+                self.infeasible_childs_counter += 1
 
             new_population.extend([child1])
+            # else:
+                # child1, child2 = self.child_maker.random_crossover(parent1, parent2)
+                # new_population.extend([child1, child2])
         self.population = new_population
 
     def do_evolution(self, routes):
@@ -115,6 +129,8 @@ class GeneticAlgorithm:
         cost_per_generation_dict = {}
         global_best_fitness = float('inf')
         self.mutation_type = 'remove_furthest'
+        self.crossover_type = 'append_closest'
+        # self.crossover_type = 'remove_longest_detour'
         for generation in range(self.generations):
             self.evolve()
             generational_best = min(self.population, key=self.fitness_evaluator.fitness)
@@ -125,6 +141,7 @@ class GeneticAlgorithm:
                 self.mutation_type = 'remove_high_capacities'
             if generational_best_fitness < global_best_fitness:
                 print('New world record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
+                print(generational_best)
                 global_best = generational_best
                 global_best_fitness = generational_best_fitness
 

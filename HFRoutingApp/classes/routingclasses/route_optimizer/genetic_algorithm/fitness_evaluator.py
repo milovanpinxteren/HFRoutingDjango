@@ -44,6 +44,7 @@ class FitnessEvaluator:
                                 print('Time constraints not met')
                                 total_penalty = float("inf")
                         else:
+                            # print("INF PENALTY")
                             total_penalty = float("inf")
                     except KeyError:  # spot not found -> it is a driver/hub
                         total_load += 0

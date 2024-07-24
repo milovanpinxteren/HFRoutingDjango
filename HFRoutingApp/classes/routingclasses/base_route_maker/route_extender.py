@@ -93,9 +93,6 @@ class RouteExtender:
                 queue.put(queue_tuple)
 
     def prepare_routes_for_map(self, routes, costs):
-        # operators = Operator.objects.all()
-        # operator_id_to_name = {operator.id: (f"{operator.user.first_name} {operator.user.last_name},"
-        #                                      f" km: {float(costs[operator.id] / 1000)}") for operator in operators}
         new_dict = {}
         for operator_id, route in routes.items():
             spots_on_route = []
