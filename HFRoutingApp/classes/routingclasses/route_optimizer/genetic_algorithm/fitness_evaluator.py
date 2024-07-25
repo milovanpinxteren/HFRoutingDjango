@@ -32,8 +32,9 @@ class FitnessEvaluator:
                 for i in range(len(route)-1):
                     geo_id = route[i]
                     next_geo_id = route[i + 1]
-                    try:
+                    if i > 2 and i < len(route) - 2:
                         total_load += self.geo_avg_no_crates[geo_id]
+                    try:
                         if total_load <= self.vehicle_capacity[vehicle]:
                             route_travel_time += self.calculate_travel_time(geo_id, next_geo_id)
                             time_constraint_met = self.check_time_constraint(vehicle, geo_id, route_travel_time)
@@ -43,8 +44,8 @@ class FitnessEvaluator:
                             elif not time_constraint_met: # if operator arrives at location before it is open.
                                 print('Time constraints not met')
                                 total_penalty = float("inf")
-                        else:
-                            # print("INF PENALTY")
+                        elif total_load > self.vehicle_capacity[vehicle]:
+                            print("CAP EXCEEDED PENALTY ", vehicle, route)
                             total_penalty = float("inf")
                     except KeyError:  # spot not found -> it is a driver/hub
                         total_load += 0

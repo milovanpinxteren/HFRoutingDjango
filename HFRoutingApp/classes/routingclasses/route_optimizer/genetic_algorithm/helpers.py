@@ -42,7 +42,7 @@ class GeneticAlgorithmHelpers:
                 if index1 >= 2 or index1 < len(
                         geo_ids) - 2 and geo_id not in self.unchangeable_geos:  # each other location
                     for index2, other_geo_id in enumerate(geo_ids):
-                        if index2 >= 2 or index2 < len(geo_ids) - 2 and other_geo_id not in self.unchangeable_geos:
+                        if index2 >= 2 or index2 < len(geo_ids) - 2:
                             distance = self.distance_matrix[geo_id][other_geo_id]
                             total_distance_to_stops += distance
                             if total_distance_to_stops > max_distance_to_stops:
@@ -103,11 +103,13 @@ class GeneticAlgorithmHelpers:
 
         return child
 
-    def remove_furthest_mutation(self, child):
+    def remove_furthest_mutation(self, parent):
+        print('child ', parent)
+        child = {k: v[:] for k, v in parent.items()}
         # try:
         inserted = False
         driver_id_to_swap, geo_id_to_swap, geo_index_to_swap = self.find_furthest_geo(child)
-        route_without_stop = child[driver_id_to_swap].copy()
+        route_without_stop = copy.deepcopy(child[driver_id_to_swap])
         route_without_stop.remove(geo_id_to_swap)
         middle_point = self.find_middle_point(route_without_stop)
         dists_geo_to_swap = self.distance_matrix[middle_point]  # dict of all geo_ids: distances from the furthest geo
@@ -126,54 +128,83 @@ class GeneticAlgorithmHelpers:
                 for geo_index_to_assign, geo_id in enumerate(geo_ids):
                     if geo_id == closest_geo_to_assign:
                         if not inserted:
-                            child[driver_id_to_assign].insert(geo_index_to_assign, geo_id_to_swap)
-                            inserted = True
+                            parent[driver_id_to_assign].insert(geo_index_to_assign, geo_id_to_swap)
+                            try:
+                                parent[driver_id_to_swap].remove(geo_id_to_swap)
+                                inserted = True
+                            except ValueError:
+                                print('valueerror')
+
                         elif inserted:
-                            child = self.routes_sorter(child)
-                            return child
+                            parent = self.routes_sorter(parent)
+                            return parent
 
         else:
             print('No close stops found, not mutating')
-        child = self.routes_sorter(child)
-        return child
+        parent = self.routes_sorter(parent)
+        return parent
         # except Exception as e:
         #     print('mutate exception: ', e)
 
     def remove_high_capacity_mutation(self, child):
-        operator_array = []
-        middles_array = []
         assignment_needed = []
         for operator, route in child.items():
             operator_capacity = self.vehicle_capacity[operator]
             total_route_load = 0
-            middle_geo = self.find_middle_point(route)
-            operator_array.append(operator)
-            middles_array.append(middle_geo)
-            for index, geo_id in enumerate(route):
-                handled_capacity_overflow = False
-                total_route_load += self.geo_avg_no_crates[geo_id]
-                if total_route_load > operator_capacity:
-                    print('overload:', operator, route)
-                    copied_route = route.copy()
-                    while not handled_capacity_overflow:
-                        furthest_driver_id, furthest_geo_id, furthest_geo_index = self.find_furthest_geo(
-                            {operator: copied_route})
-                        if (total_route_load - self.geo_avg_no_crates[furthest_geo_id]) < operator_capacity and furthest_geo_id not in self.unchangeable_geos:
-                            child[furthest_driver_id].remove(furthest_geo_id)
-                            handled_capacity_overflow = True
-                            assignment_needed.append(furthest_geo_id)
-                        elif furthest_geo_index == None:
-                            print('could not handle capacity overflow')
-                            return child
-                        else:
-                            copied_route.remove(furthest_geo_id)
-                elif len(assignment_needed) > 0:
-                    if (total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) < operator_capacity and \
-                            geo_id not in self.unchangeable_geos:
+            for index in range(len(route) - 1):
+                if index > 2 and index < len(route) - 2:
+                    geo_id = route[index]
+                    total_route_load += self.geo_avg_no_crates[geo_id]
+                    if total_route_load > operator_capacity:
+                        print('overload:', operator, route)
+                        assignment_needed.append(geo_id)
+                        route.pop(index)
+                        total_route_load -= self.geo_avg_no_crates[geo_id]
+                    if assignment_needed and (
+                            total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) <= operator_capacity and \
+                            (geo_id not in self.unchangeable_geos):
                         child[operator].insert(index, assignment_needed[0])
+                        total_route_load += self.geo_avg_no_crates[assignment_needed[0]]
                         assignment_needed.pop(0)
-
+                    # else:
+                    #     print('overloading stop not yet found')
         return child
+
+    # def remove_high_capacity_mutation(self, child):
+    #     operator_array = []
+    #     middles_array = []
+    #     assignment_needed = []
+    #     for operator, route in child.items():
+    #         operator_capacity = self.vehicle_capacity[operator]
+    #         total_route_load = 0
+    #         middle_geo = self.find_middle_point(route)
+    #         operator_array.append(operator)
+    #         middles_array.append(middle_geo)
+    #         for index, geo_id in enumerate(route):
+    #             handled_capacity_overflow = False
+    #             total_route_load += self.geo_avg_no_crates[geo_id]
+    #             if total_route_load > operator_capacity:
+    #                 print('overload:', operator, route)
+    #                 copied_route = route.copy()
+    #                 while not handled_capacity_overflow:
+    #                     furthest_driver_id, furthest_geo_id, furthest_geo_index = self.find_furthest_geo(
+    #                         {operator: copied_route})
+    #                     if (total_route_load - self.geo_avg_no_crates[furthest_geo_id]) < operator_capacity and furthest_geo_id not in self.unchangeable_geos:
+    #                         child[furthest_driver_id].remove(furthest_geo_id)
+    #                         handled_capacity_overflow = True
+    #                         assignment_needed.append(furthest_geo_id)
+    #                     elif furthest_geo_index == None:
+    #                         print('could not handle capacity overflow')
+    #                         return child
+    #                     else:
+    #                         copied_route.remove(furthest_geo_id)
+    #             elif len(assignment_needed) > 0:
+    #                 if (total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) < operator_capacity and \
+    #                         geo_id not in self.unchangeable_geos:
+    #                     child[operator].insert(index, assignment_needed[0])
+    #                     assignment_needed.pop(0)
+    #
+    #     return child
 
     def routes_sorter(self, routes):
         new_routes = {}

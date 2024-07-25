@@ -49,9 +49,9 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 40
-        self.generations = 50  # 1300
-        self.mutation_rate = 1  # 0.2
-        self.crossover_rate = 0.5
+        self.generations = 300  # 1300
+        # self.mutation_rate = 1  # 0.2
+        # self.crossover_rate = 0.5
         self.elitism_count = 8
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
@@ -86,7 +86,7 @@ class GeneticAlgorithm:
                                         range(len(self.ranked_population) - self.elitism_count)]
         new_population = []
         self.mutation_type = 'remove_high_capacities'
-        if self.infeasible_childs_counter < self.population_size / 2:
+        if self.infeasible_childs_counter < (self.population_size / 3):
             self.mutation_type = 'remove_furthest'
         else:
             self.mutation_type = 'remove_high_capacities'
@@ -94,21 +94,35 @@ class GeneticAlgorithm:
         new_population.extend(self.elites)
         while len(new_population) < self.population_size:
             parent1, parent2 = self.tournament_selection()
-            self.mutation_type = 'remove_high_capacities'
-            if self.mutation_type == 'remove_high_capacities':
-                child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
-            else:
-                child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
-                # child1 = self.child_maker.crossover(child1, self.crossover_type) #36573
+            # self.mutation_type = 'remove_high_capacities'
+            parent_fitness = self.fitness_evaluator.fitness(parent1)
+            # if parent_fitness == float("inf"):
+            #     mutation_counter = 0
+            #     child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
+            #     child_fitness = self.fitness_evaluator.fitness(child1)
+            #     while child_fitness == float("inf"):
+            #         child1 = self.ga_helpers.mutate(child1, self.mutation_type)
+            #         child_fitness = self.fitness_evaluator.fitness(child1)
+            #         mutation_counter += 1
+            #         print("child fitness after mutation", mutation_counter, 'is ', child_fitness)
+            # else:
+            child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
             child_fitness = self.fitness_evaluator.fitness(child1)
             print("child fitness", child_fitness)
+            # if child_fitness >= parent_fitness:
+            print('mutation resulted in worse child, trying crossover')
+            child1 = self.child_maker.crossover(parent1, 'remove_longest_detour')
+            # child_fitness = self.fitness_evaluator.fitness(child1)
+                # if child_fitness >= parent_fitness:
+            print('first crossover resulted in worse child, trying second crossover')
+            child1 = self.child_maker.crossover(child1, 'append_closest')
+            child_fitness = self.fitness_evaluator.fitness(child1)
+            # else:
+            #     print(parent_fitness - child_fitness, ' improved')
+
             if child_fitness == float("inf"):
                 self.infeasible_childs_counter += 1
-
             new_population.extend([child1])
-            # else:
-                # child1, child2 = self.child_maker.random_crossover(parent1, parent2)
-                # new_population.extend([child1, child2])
         self.population = new_population
 
     def do_evolution(self, routes):
