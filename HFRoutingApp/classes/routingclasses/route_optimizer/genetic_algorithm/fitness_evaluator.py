@@ -45,7 +45,7 @@ class FitnessEvaluator:
                                 print('Time constraints not met')
                                 total_penalty = float("inf")
                         elif total_load > self.vehicle_capacity[vehicle]:
-                            print("CAP EXCEEDED PENALTY ", vehicle, route)
+                            # print("CAP EXCEEDED PENALTY ", vehicle, route)
                             total_penalty = float("inf")
                     except KeyError:  # spot not found -> it is a driver/hub
                         total_load += 0

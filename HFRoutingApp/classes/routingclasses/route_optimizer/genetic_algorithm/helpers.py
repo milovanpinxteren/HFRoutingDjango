@@ -104,7 +104,6 @@ class GeneticAlgorithmHelpers:
         return child
 
     def remove_furthest_mutation(self, parent):
-        print('child ', parent)
         child = {k: v[:] for k, v in parent.items()}
         # try:
         inserted = False
@@ -170,41 +169,6 @@ class GeneticAlgorithmHelpers:
                     #     print('overloading stop not yet found')
         return child
 
-    # def remove_high_capacity_mutation(self, child):
-    #     operator_array = []
-    #     middles_array = []
-    #     assignment_needed = []
-    #     for operator, route in child.items():
-    #         operator_capacity = self.vehicle_capacity[operator]
-    #         total_route_load = 0
-    #         middle_geo = self.find_middle_point(route)
-    #         operator_array.append(operator)
-    #         middles_array.append(middle_geo)
-    #         for index, geo_id in enumerate(route):
-    #             handled_capacity_overflow = False
-    #             total_route_load += self.geo_avg_no_crates[geo_id]
-    #             if total_route_load > operator_capacity:
-    #                 print('overload:', operator, route)
-    #                 copied_route = route.copy()
-    #                 while not handled_capacity_overflow:
-    #                     furthest_driver_id, furthest_geo_id, furthest_geo_index = self.find_furthest_geo(
-    #                         {operator: copied_route})
-    #                     if (total_route_load - self.geo_avg_no_crates[furthest_geo_id]) < operator_capacity and furthest_geo_id not in self.unchangeable_geos:
-    #                         child[furthest_driver_id].remove(furthest_geo_id)
-    #                         handled_capacity_overflow = True
-    #                         assignment_needed.append(furthest_geo_id)
-    #                     elif furthest_geo_index == None:
-    #                         print('could not handle capacity overflow')
-    #                         return child
-    #                     else:
-    #                         copied_route.remove(furthest_geo_id)
-    #             elif len(assignment_needed) > 0:
-    #                 if (total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) < operator_capacity and \
-    #                         geo_id not in self.unchangeable_geos:
-    #                     child[operator].insert(index, assignment_needed[0])
-    #                     assignment_needed.pop(0)
-    #
-    #     return child
 
     def routes_sorter(self, routes):
         new_routes = {}
@@ -260,3 +224,12 @@ class GeneticAlgorithmHelpers:
                     print('could not convert geo to spot/hub/operator')
 
         return routes_with_spots
+
+    def check_length_of_routes(self, parent1):
+        removed = False
+        drivers_to_remove = [driver for driver, route in parent1.items() if len(route) == 4]
+        for driver in drivers_to_remove:
+            print(f'Removing driver {driver} with route of length 4')
+            parent1.pop(driver)
+            removed = True
+        return removed, parent1

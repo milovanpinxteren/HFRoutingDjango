@@ -14,11 +14,13 @@ class ChildMaker:
         self.vehicle_capacity = vehicle_capacity
         self.helpers = helpers
 
-    def crossover(self, parent1, crossover_type):
+    def crossover(self, crossover_type, parent1):
         if crossover_type == 'append_closest':
             child1 = self.append_closest_crossover(parent1)
         elif crossover_type == 'remove_longest_detour':
             child1 = self.remove_longest_detour_crossover(parent1)
+        elif crossover_type == 'random':
+            child1 = self.random_crossover(parent1)
         return child1
 
     def remove_longest_detour_crossover(self, parent1):
@@ -87,8 +89,6 @@ class ChildMaker:
                                         driver_id_to_remove = operator2
                                         stop_to_append = stop2
                                         index_to_append = index1
-                                    # else:
-                                    #     print('capacity overload')
 
         if stop_to_append is not None:
             child1[driver_id_to_append].insert(index_to_append + 1, stop_to_append)
@@ -96,68 +96,48 @@ class ChildMaker:
         else:
             print('No switch found')
 
-        # operator_capacity = self.vehicle_capacity[driver_id_to_append]
-        # route_capacity = self.geo_avg_no_crates[stop_to_append]
-        # for stop in child1[driver_id_to_append]:
-        #     route_capacity += self.geo_avg_no_crates[stop]
-        #
-        # if route_capacity <= operator_capacity:
-        #     child1[driver_id_to_append].insert(index_to_append + 1, stop_to_append)
-        #     child1[driver_id_to_remove].remove(stop_to_append)
-        # else:
-        #     print('capacity overwrite, random crossover')
-        #     child1, child2 = self.random_crossover(parent1, parent2)
-
         return child1
 
-    def random_crossover(self, parent1, parent2):
-        child1 = {k: v[:] for k, v in parent1.items()}
-        child2 = {k: v[:] for k, v in parent2.items()}
+    def random_crossover(self, parent1):
+        try:
+            child1 = {k: v[:] for k, v in parent1.items()}
 
-        stop1_changeable = False
-        locations_tried_counter1 = 0
-        while not stop1_changeable and locations_tried_counter1 < self.geos_to_spot_len:
-            driver1 = random.choice(list(parent1.keys()))
-            stop1_index = random.randint(2, len(parent1[driver1]) - 3)
-            stop1 = parent1[driver1][stop1_index]
-            if stop1 not in self.unchangeable_geos:
-                stop1_changeable = True
-            else:
-                locations_tried_counter1 += 1
+            stop1_changeable = False
+            locations_tried_counter1 = 0
+            while not stop1_changeable and locations_tried_counter1 < self.geos_to_spot_len:
+                driver1 = random.choice(list(parent1.keys()))
+                stop1_index = random.randint(2, len(parent1[driver1]) - 3)
+                stop1 = parent1[driver1][stop1_index]
+                if stop1 not in self.unchangeable_geos:
+                    stop1_changeable = True
+                else:
+                    locations_tried_counter1 += 1
 
-        stop2_changeable = False
-        locations_tried_counter2 = 0
-        while not stop2_changeable and locations_tried_counter2 < self.geos_to_spot_len:
-            driver2 = random.choice(list(parent2.keys()))
-            stop2_index = random.randint(2, len(parent2[driver2]) - 3)
-            stop2 = parent2[driver2][stop2_index]
-            if stop2 not in self.unchangeable_geos or stop2 in self.operator_geo_dict[driver1]:
-                stop2_changeable = True
-            else:
-                locations_tried_counter2 += 1
+            stop2_changeable = False
+            locations_tried_counter2 = 0
+            while not stop2_changeable and locations_tried_counter2 < self.geos_to_spot_len:
+                driver2 = random.choice(list(parent1.keys()))
+                stop2_index = random.randint(2, len(parent1[driver2]) - 3)
+                stop2 = parent1[driver2][stop2_index]
+                if stop2 not in self.unchangeable_geos and driver1 != driver2:
+                    stop2_changeable = True
+                else:
+                    locations_tried_counter2 += 1
 
-        if not stop1_changeable or not stop2_changeable:
-            print('No changeable stops found, returning parents')
-            return parent1, parent2
+            if not stop1_changeable or not stop2_changeable:
+                print('No changeable stops found, returning parents')
+                return parent1
 
-        for key, value_list in child1.items():
-            if stop2 in value_list:
-                child1[key][value_list.index(stop2)] = stop1
-
-        for key, value_list in child2.items():
-            if stop1 in value_list:
-                child2[key][value_list.index(stop1)] = stop2
-
-        if stop2 not in child1[driver1]:
             child1[driver1][stop1_index] = stop2
-        else:
-            # print('stop already present')
-            child1[driver1][stop1_index] = stop1
+            child1[driver2][stop2_index] = stop1
 
-        if stop1 not in child2[driver2]:
-            child2[driver2][stop2_index] = stop1
-        else:
-            # print('stop already present')
-            child2[driver2][stop2_index] = stop2
+            # for key, value_list in child1.items():
+            #     if stop1 in value_list:
+            #         child1[key][value_list.index(stop1)] = stop2
+            #     elif stop2 in value_list:
+            #         child1[key][value_list.index(stop2)] = stop1
 
-        return child1, child2
+        except Exception as e:
+            print(e)
+
+        return child1

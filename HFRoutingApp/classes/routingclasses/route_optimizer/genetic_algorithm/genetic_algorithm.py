@@ -13,6 +13,7 @@ from HFRoutingApp.models import Spot, Operator, OperatorGeoLink, Geo, Location, 
 class GeneticAlgorithm:
     def __init__(self):
         # Dict generators
+        self.removed = False
         self.vehicle_capacity = {operator.id: operator.max_vehicle_load for operator in Operator.objects.all()}
         self.operator_geo_dict = defaultdict(list)
         operatorGeoLink_objects = OperatorGeoLink.objects.all()
@@ -27,6 +28,8 @@ class GeneticAlgorithm:
         self.unchangeable_geos = [link.geo_id for link in OperatorGeoLink.objects.all()] + \
                                  [hub.geo_id for hub in Hub.objects.all()] + \
                                  [operator.geo_id for operator in Operator.objects.all()]
+        self.hubs_and_operators = [hub.geo_id for hub in Hub.objects.all()] + \
+                                  [operator.geo_id for operator in Operator.objects.all()]
         self.location_opening_times = {location.geo_id: location.opening_time for location in Location.objects.all()}
         self.starting_times_dict = {operator.id: operator.starting_time for operator in Operator.objects.all()}
         spots = Spot.objects.select_related('location__geo').all()
@@ -49,10 +52,10 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 40
-        self.generations = 300  # 1300
+        self.generations = 400  # 1300
         # self.mutation_rate = 1  # 0.2
         # self.crossover_rate = 0.5
-        self.elitism_count = 8
+        self.elitism_count = 4
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
         self.infeasible_childs_counter = 0
@@ -85,43 +88,39 @@ class GeneticAlgorithm:
         self.selection_probabilities = [(i + 1) / self.total_ranks for i in
                                         range(len(self.ranked_population) - self.elitism_count)]
         new_population = []
-        self.mutation_type = 'remove_high_capacities'
-        if self.infeasible_childs_counter < (self.population_size / 3):
-            self.mutation_type = 'remove_furthest'
-        else:
-            self.mutation_type = 'remove_high_capacities'
-        self.infeasible_childs_counter = 0
         new_population.extend(self.elites)
         while len(new_population) < self.population_size:
+            self.mutation_type = 'remove_furthest'
             parent1, parent2 = self.tournament_selection()
-            # self.mutation_type = 'remove_high_capacities'
             parent_fitness = self.fitness_evaluator.fitness(parent1)
-            # if parent_fitness == float("inf"):
-            #     mutation_counter = 0
-            #     child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
-            #     child_fitness = self.fitness_evaluator.fitness(child1)
-            #     while child_fitness == float("inf"):
-            #         child1 = self.ga_helpers.mutate(child1, self.mutation_type)
-            #         child_fitness = self.fitness_evaluator.fitness(child1)
-            #         mutation_counter += 1
-            #         print("child fitness after mutation", mutation_counter, 'is ', child_fitness)
-            # else:
-            child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
-            child_fitness = self.fitness_evaluator.fitness(child1)
-            print("child fitness", child_fitness)
-            # if child_fitness >= parent_fitness:
-            print('mutation resulted in worse child, trying crossover')
-            child1 = self.child_maker.crossover(parent1, 'remove_longest_detour')
-            # child_fitness = self.fitness_evaluator.fitness(child1)
-                # if child_fitness >= parent_fitness:
-            print('first crossover resulted in worse child, trying second crossover')
-            child1 = self.child_maker.crossover(child1, 'append_closest')
-            child_fitness = self.fitness_evaluator.fitness(child1)
-            # else:
-            #     print(parent_fitness - child_fitness, ' improved')
+            self.removed, parent1 = self.ga_helpers.check_length_of_routes(parent1)
+            if parent_fitness == float("inf"):
+                self.mutation_type = 'remove_high_capacities'
+                print('remove high')
 
-            if child_fitness == float("inf"):
-                self.infeasible_childs_counter += 1
+            child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
+            mutation_check = self.check_geo_counts(child1)
+            if mutation_check == False:
+                print('mutation failed', self.mutation_type)
+            child1 = self.child_maker.crossover('remove_longest_detour', child1)
+            remove_longest_detour = self.check_geo_counts(child1)
+            if remove_longest_detour == False:
+                print('remove_longest_detour failed')
+            child1 = self.child_maker.crossover('append_closest', child1)
+            append_closest = self.check_geo_counts(child1)
+            if append_closest == False:
+                print('append_closest failed')
+            child_fitness = self.fitness_evaluator.fitness(child1)
+            # print('Fitness of child and parent', child_fitness, parent_fitness)
+            # if child_fitness < parent_fitness:
+            #     print('improved')
+            if child_fitness >= parent_fitness:
+                # print('doing random crossover')
+                child1 = self.child_maker.crossover('random', parent1)
+                random = self.check_geo_counts(child1)
+                if random == False:
+                    print('random failed')
+
             new_population.extend([child1])
         self.population = new_population
 
@@ -135,9 +134,15 @@ class GeneticAlgorithm:
                 elif isinstance(stop, Spot):
                     vehicle_array.append(stop.location.geo_id)
             transformed_routes[vehicle] = vehicle_array
-        original_len = 0
+        print('Begin routes:', transformed_routes)
+        # original_len = 0
+        self.geo_counts = {}
         for operator, route in transformed_routes.items():
-            original_len += len(route)
+            for stop in route:
+                if stop in self.geo_counts:
+                    self.geo_counts[stop] += 1
+                else:
+                    self.geo_counts[stop] = 1
         self.population = self.ga_helpers.initialize_population(transformed_routes, self.population_size)
         global_best = {}
         cost_per_generation_dict = {}
@@ -160,7 +165,34 @@ class GeneticAlgorithm:
                 global_best_fitness = generational_best_fitness
 
         # best_solution = min(self.population, key=self.fitness_evaluator.fitness)
+        print('best solution', global_best)
         print('COST PER GENERATION DICT')
         print(cost_per_generation_dict)
         routes_with_spots = self.ga_helpers.reverse_transform_routes(global_best)
         return routes_with_spots
+
+    def check_geo_counts(self, child):
+        try:
+            new_geo_counts = {}
+            for operator, route in child.items():
+                for stop in route:
+                    if stop in new_geo_counts:
+                        new_geo_counts[stop] += 1
+                    else:
+                        new_geo_counts[stop] = 1
+
+            for value, count in self.geo_counts.items():
+                # if value in self.hubs_and_operators:
+                #     print('Value is a hub or operator')
+                if value not in self.hubs_and_operators: # If a route is deleted, the geo_counts is not correct, but should continue
+                    if new_geo_counts[value] != count:
+                        return False
+            return True
+
+
+
+        except Exception as e:
+            print('not good at all', e)
+            print('self.geocounts', self.geo_counts)
+            print('new_geo_counts', new_geo_counts)
+            return False
