@@ -28,7 +28,7 @@ class GeneticAlgorithmHelpers:
                 random.shuffle(intermediate_stops)
                 new_route = fixed_stops_start + intermediate_stops + fixed_stops_end
                 individual[driver] = new_route
-                population.append(individual)
+            population.append(individual)
         return population
 
     def find_furthest_geo(self, child):  # returns geo of the stop which is furthest from the other stops in all routes
@@ -229,7 +229,7 @@ class GeneticAlgorithmHelpers:
         removed = False
         drivers_to_remove = [driver for driver, route in parent1.items() if len(route) == 4]
         for driver in drivers_to_remove:
-            print(f'Removing driver {driver} with route of length 4')
+            # print(f'Removing driver {driver} with route of length 4')
             parent1.pop(driver)
             removed = True
         return removed, parent1

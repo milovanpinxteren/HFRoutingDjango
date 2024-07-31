@@ -24,7 +24,6 @@ class GeneticAlgorithm:
         for spot in Spot.objects.select_related('location__geo').all():
             geo_id = spot.location.geo_id
             self.geos_to_spot.setdefault(geo_id, []).append(spot.id)
-        # self.unchangeable_geos = [link.geo_id for link in OperatorGeoLink.objects.all()]
         self.unchangeable_geos = [link.geo_id for link in OperatorGeoLink.objects.all()] + \
                                  [hub.geo_id for hub in Hub.objects.all()] + \
                                  [operator.geo_id for operator in Operator.objects.all()]
@@ -53,12 +52,9 @@ class GeneticAlgorithm:
         # Hyperparameters
         self.population_size = 40
         self.generations = 400  # 1300
-        # self.mutation_rate = 1  # 0.2
-        # self.crossover_rate = 0.5
         self.elitism_count = 4
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
-        self.infeasible_childs_counter = 0
         # Imports/inits
         self.route_utils = RouteUtils()
         self.distance_matrix = self.route_utils.get_distance_matrix_with_double_keys()
@@ -73,13 +69,27 @@ class GeneticAlgorithm:
                                       self.distance_matrix, self.geo_avg_no_crates, self.vehicle_capacity,
                                       self.ga_helpers)
 
+    # def tournament_selection(self):
+    #     selected = []
+    #     for _ in range(2):  # Select two parents
+    #         tournament = random.sample(self.ranked_population, self.tournament_size)
+    #         parent = min(tournament, key=self.fitness_evaluator.fitness)
+    #         selected.append(parent)
+    #     return selected[0], selected[1]
+
     def tournament_selection(self):
-        selected = []
-        for _ in range(2):  # Select two parents
-            tournament = random.sample(self.ranked_population, self.tournament_size)
-            parent = min(tournament, key=self.fitness_evaluator.fitness)
-            selected.append(parent)
-        return selected[0], selected[1]
+        try:
+            contestants = self.ranked_population[:self.tournament_size]
+            while len(contestants) > 1:
+                contestant1, contestant2 = random.sample(contestants, 2)
+                loser = max([contestant1, contestant2], key=self.fitness_evaluator.fitness)
+                contestants.remove(loser)
+            return contestants[0]
+        except Exception as e:
+            print(e)
+            return self.ranked_population[0]
+
+
 
     def evolve(self):
         self.ranked_population = sorted(self.population, key=self.fitness_evaluator.fitness)
@@ -91,7 +101,7 @@ class GeneticAlgorithm:
         new_population.extend(self.elites)
         while len(new_population) < self.population_size:
             self.mutation_type = 'remove_furthest'
-            parent1, parent2 = self.tournament_selection()
+            parent1 = self.tournament_selection()
             parent_fitness = self.fitness_evaluator.fitness(parent1)
             self.removed, parent1 = self.ga_helpers.check_length_of_routes(parent1)
             if parent_fitness == float("inf"):
