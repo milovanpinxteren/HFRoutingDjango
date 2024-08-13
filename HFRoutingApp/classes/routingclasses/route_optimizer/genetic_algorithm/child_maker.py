@@ -19,7 +19,7 @@ class ChildMaker:
             child1 = self.append_closest_crossover(parent1)
         elif crossover_type == 'remove_longest_detour':
             child1 = self.remove_longest_detour_crossover(parent1)
-        elif crossover_type == 'random':
+        elif crossover_type == 'random_crossover':
             child1 = self.random_crossover(parent1)
         return child1
 

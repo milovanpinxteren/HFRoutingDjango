@@ -1,5 +1,5 @@
-import random
 from collections import defaultdict
+import random
 
 from django.db.models import Count
 
@@ -52,6 +52,8 @@ class GeneticAlgorithm:
         # Hyperparameters
         self.population_size = 40
         self.generations = 400  # 1300
+        self.mutation_rate = 0.4
+        self.random_rate = 0.5
         self.elitism_count = 4
         self.tournament_size = 8
         self.travel_time_exceeded_penalty = 4000
@@ -69,14 +71,6 @@ class GeneticAlgorithm:
                                       self.distance_matrix, self.geo_avg_no_crates, self.vehicle_capacity,
                                       self.ga_helpers)
 
-    # def tournament_selection(self):
-    #     selected = []
-    #     for _ in range(2):  # Select two parents
-    #         tournament = random.sample(self.ranked_population, self.tournament_size)
-    #         parent = min(tournament, key=self.fitness_evaluator.fitness)
-    #         selected.append(parent)
-    #     return selected[0], selected[1]
-
     def tournament_selection(self):
         try:
             contestants = self.ranked_population[:self.tournament_size]
@@ -88,8 +82,6 @@ class GeneticAlgorithm:
         except Exception as e:
             print(e)
             return self.ranked_population[0]
-
-
 
     def evolve(self):
         self.ranked_population = sorted(self.population, key=self.fitness_evaluator.fitness)
@@ -107,28 +99,32 @@ class GeneticAlgorithm:
             if parent_fitness == float("inf"):
                 self.mutation_type = 'remove_high_capacities'
                 print('remove high')
-
-            child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
-            mutation_check = self.check_geo_counts(child1)
-            if mutation_check == False:
-                print('mutation failed', self.mutation_type)
-            child1 = self.child_maker.crossover('remove_longest_detour', child1)
-            remove_longest_detour = self.check_geo_counts(child1)
-            if remove_longest_detour == False:
-                print('remove_longest_detour failed')
-            child1 = self.child_maker.crossover('append_closest', child1)
-            append_closest = self.check_geo_counts(child1)
-            if append_closest == False:
-                print('append_closest failed')
+            random_number = random.random()
+            if random_number <= self.mutation_rate:
+                child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
+                mutation_check = self.check_geo_counts(child1)
+                if mutation_check == False:
+                    print('mutation failed', self.mutation_type)
+            else:
+                child1 = self.child_maker.crossover('remove_longest_detour', parent1)
+                remove_longest_detour = self.check_geo_counts(child1)
+                if remove_longest_detour == False:
+                    print('remove_longest_detour failed')
+                child1 = self.child_maker.crossover('append_closest', child1)
+                append_closest = self.check_geo_counts(child1)
+                if append_closest == False:
+                    print('append_closest failed')
             child_fitness = self.fitness_evaluator.fitness(child1)
-            # print('Fitness of child and parent', child_fitness, parent_fitness)
-            # if child_fitness < parent_fitness:
-            #     print('improved')
             if child_fitness >= parent_fitness:
-                # print('doing random crossover')
-                child1 = self.child_maker.crossover('random', parent1)
-                random = self.check_geo_counts(child1)
-                if random == False:
+                child1 = self.child_maker.crossover('random_crossover', parent1)
+                random_crossover = self.check_geo_counts(child1)
+                if random_crossover == False:
+                    print('random failed')
+
+            if random.random() <= self.random_rate:
+                child1 = self.child_maker.crossover('random_crossover', child1)
+                random_crossover = self.check_geo_counts(child1)
+                if random_crossover == False:
                     print('random failed')
 
             new_population.extend([child1])
@@ -164,12 +160,12 @@ class GeneticAlgorithm:
             self.evolve()
             generational_best = min(self.population, key=self.fitness_evaluator.fitness)
             generational_best_fitness = self.fitness_evaluator.fitness(generational_best)
-            print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
+            # print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
             cost_per_generation_dict[generation] = generational_best_fitness
             if generational_best_fitness == float("inf"):
                 self.mutation_type = 'remove_high_capacities'
             if generational_best_fitness < global_best_fitness:
-                print('New world record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
+                print('New record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
                 print(generational_best)
                 global_best = generational_best
                 global_best_fitness = generational_best_fitness
@@ -194,7 +190,7 @@ class GeneticAlgorithm:
             for value, count in self.geo_counts.items():
                 # if value in self.hubs_and_operators:
                 #     print('Value is a hub or operator')
-                if value not in self.hubs_and_operators: # If a route is deleted, the geo_counts is not correct, but should continue
+                if value not in self.hubs_and_operators:  # If a route is deleted, the geo_counts is not correct, but should continue
                     if new_geo_counts[value] != count:
                         return False
             return True

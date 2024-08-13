@@ -3,7 +3,6 @@ import django
 import itertools
 from statistics import mean
 
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'HFRoutingDjango.settings')
 django.setup()
 
@@ -27,7 +26,6 @@ class HyperparameterTuner:
         self.routes = self._initialize_routes('2024-06-19')
 
         print('ROUTES: ', self.routes)
-
 
     def _initialize_routes(self, date):
         self.routes = generate_start_route_for_tuner(date)
@@ -57,7 +55,8 @@ def evaluate_ga(params, routes):
     cost_calculator = CalculateCostPerRoute()
     ga.population_size = params['population_size']
     ga.generations = params['generations']
-    # ga.mutation_rate = params['mutation_rate']
+    ga.mutation_rate = params['mutation_rate']
+    ga.random_rate = params['random_rate']
     ga.elitism_count = params['elitism_count']
     ga.tournament_size = params['tournament_size']
 
@@ -72,11 +71,12 @@ def evaluate_ga(params, routes):
 
 # Define the hyperparameter space
 hyperparameter_space = {
-    'population_size': list(range(25, 126, 25)),
-    'generations': list(range(50, 451, 100)),
-    # 'mutation_rate': [0 + 0.05 * i for i in range(int((0.4 - 0) / 0.05))],
-    'elitism_count': list(range(2, 14, 4)),
-    'tournament_size': list(range(4, 14, 4))
+    'population_size': list(range(10, 50, 10)),
+    'generations': list(range(50, 250, 50)),
+    'mutation_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
+    'random_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
+    'elitism_count': list(range(4, 16, 4)),
+    'tournament_size': list(range(1, 13, 3))
 }
 
 # Create the tuner and perform grid search
@@ -85,3 +85,6 @@ best_params, best_score = tuner.grid_search()
 
 print(f'Best Hyperparameters: {best_params}')
 print(f'Best Score: {best_score}')
+
+
+# Best Hyperparameters: {'population_size': 40, 'generations': 100, 'mutation_rate': 0.4, 'random_rate': 0.6000000000000001, 'elitism_count': 4, 'tournament_size': 7}
