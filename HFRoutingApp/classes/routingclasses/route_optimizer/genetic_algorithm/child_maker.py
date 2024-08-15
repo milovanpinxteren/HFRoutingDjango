@@ -19,6 +19,10 @@ class ChildMaker:
             child1 = self.append_closest_crossover(parent1)
         elif crossover_type == 'remove_longest_detour':
             child1 = self.remove_longest_detour_crossover(parent1)
+            i = 0
+            while i < 3:
+                child1 = self.remove_longest_detour_crossover(child1)
+                i += 1
         elif crossover_type == 'random_crossover':
             child1 = self.random_crossover(parent1)
         return child1
@@ -26,11 +30,9 @@ class ChildMaker:
     def remove_longest_detour_crossover(self, parent1):
         child1 = {k: v[:] for k, v in parent1.items()}
         child1 = self.helpers.routes_sorter(child1)
-        stop_to_remove = None
-        operator_to_remove_from = None
+        detours = []
         for operator, route in child1.items():
             route_distance = sum(self.distance_matrix[route[i]][route[i + 1]] for i in range(len(route) - 1))
-            max_saving = 0
             for index in range(2, len(route) - 2):  # Skip first 2 and last 2 stops
                 current_distance = route_distance
                 new_distance = (current_distance -
@@ -38,10 +40,14 @@ class ChildMaker:
                                 self.distance_matrix[route[index]][route[index + 1]] +
                                 self.distance_matrix[route[index - 1]][route[index + 1]])
                 distance_saving = current_distance - new_distance
-                if distance_saving > max_saving and route[index] not in self.unchangeable_geos:
-                    max_saving = distance_saving
-                    stop_to_remove = route[index]
-                    operator_to_remove_from = operator
+                if route[index] not in self.unchangeable_geos:
+                    detours.append((distance_saving, route[index], operator, index))
+
+        detours.sort(reverse=True, key=lambda x: x[0])
+        top_25_percent_index = max(1, len(detours) // 10)  # Ensure at least one item is selected
+        top_detours = detours[:top_25_percent_index]
+        selected_saving, stop_to_remove, operator_to_remove_from, index_to_remove = random.choice(top_detours)
+
 
         closest_distance = float("inf")
         operator_to_assign_to = None
@@ -61,6 +67,46 @@ class ChildMaker:
             print("error")
 
         return child1
+
+
+    # def remove_longest_detour_crossover(self, parent1):
+    #     child1 = {k: v[:] for k, v in parent1.items()}
+    #     child1 = self.helpers.routes_sorter(child1)
+    #     stop_to_remove = None
+    #     operator_to_remove_from = None
+    #     for operator, route in child1.items():
+    #         route_distance = sum(self.distance_matrix[route[i]][route[i + 1]] for i in range(len(route) - 1))
+    #         max_saving = 0
+    #         for index in range(2, len(route) - 2):  # Skip first 2 and last 2 stops
+    #             current_distance = route_distance
+    #             new_distance = (current_distance -
+    #                             self.distance_matrix[route[index - 1]][route[index]] -
+    #                             self.distance_matrix[route[index]][route[index + 1]] +
+    #                             self.distance_matrix[route[index - 1]][route[index + 1]])
+    #             distance_saving = current_distance - new_distance
+    #             if distance_saving > max_saving and route[index] not in self.unchangeable_geos:
+    #                 max_saving = distance_saving
+    #                 stop_to_remove = route[index]
+    #                 operator_to_remove_from = operator
+    #
+    #     closest_distance = float("inf")
+    #     operator_to_assign_to = None
+    #     index_to_assign_to = None
+    #     for operator, route in child1.items():
+    #         for index in range(2, len(route) - 2):
+    #             distance_to_stop = self.distance_matrix[route[index]][stop_to_remove]
+    #             if distance_to_stop < closest_distance and operator != operator_to_remove_from:
+    #                 closest_distance = distance_to_stop
+    #                 operator_to_assign_to = operator
+    #                 index_to_assign_to = index
+    #
+    #     if operator_to_remove_from and stop_to_remove and operator_to_assign_to and index_to_assign_to:
+    #         child1[operator_to_remove_from].remove(stop_to_remove)
+    #         child1[operator_to_assign_to].insert(index_to_assign_to + 1, stop_to_remove)
+    #     else:
+    #         print("error")
+    #
+    #     return child1
 
     def append_closest_crossover(self, parent1):
         child1 = {k: v[:] for k, v in parent1.items()}
