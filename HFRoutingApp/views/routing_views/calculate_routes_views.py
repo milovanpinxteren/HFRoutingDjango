@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+
+from HFRoutingApp.classes.decisionmaker_classes.decision_maker import DecisionMaker
 from HFRoutingApp.classes.map_maker import MapMaker
 from HFRoutingApp.classes.routingclasses.base_route_maker.mandatory_route_maker import MandatoryRouteMaker
 from HFRoutingApp.classes.routingclasses.base_route_maker.route_extender import RouteExtender
@@ -27,6 +29,7 @@ def calculate_routes_for_date(request):
     # try:
     print('calculate for dates')
     stop_getter = StopGetter()
+    decision_maker = DecisionMaker()
     date = request.GET.get('date', None)
     stops = stop_getter.get_stops_on_date(date)
     operator_quantity_checker = OperatorQuantityChecker()
@@ -44,7 +47,7 @@ def calculate_routes_for_date(request):
     print('making mandatory routes', stops)
     routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops, date)
     extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
-    #TODO: DECISION MAKING: check if removing last hub significantly decreases travel (allow last hub to be removed)
+    extended_routes = decision_maker.make_decision(extended_routes)
     routes_map = map_maker.make_map(extended_routes, 'routes')
 
     context.update({'routes': True, 'map': routes_map._repr_html_()})

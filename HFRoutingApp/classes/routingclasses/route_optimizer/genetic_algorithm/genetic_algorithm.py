@@ -51,7 +51,7 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 60
-        self.generations = 450  # 1300
+        self.generations = 5  # 1300
         self.mutation_rate = 0.6
         # self.random_rate = 0.6
         self.crossover_type_choice = 0.5
