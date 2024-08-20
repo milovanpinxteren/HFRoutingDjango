@@ -51,15 +51,15 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 60
-        self.generations = 5  # 1300
-        self.mutation_rate = 0.6
-        # self.random_rate = 0.6
-        self.crossover_type_choice = 0.5
-        self.elitism_count = 4
-        self.route_shuffle_amount = 25
+        self.generations = 75  # 1300
+        self.mutation_rate = 0.2
+        self.crossover_type_choice = 0.4
+        self.route_shuffle_amount = 20
         self.rebuilding_amount = 20
         self.acceptance_multiplier = 1.1
         self.tournament_size = 10
+        self.elitism_count = 4
+
         self.travel_time_exceeded_penalty = 4000
         # Imports/inits
         self.route_utils = RouteUtils()
@@ -103,9 +103,10 @@ class GeneticAlgorithm:
             self.removed, parent1 = self.ga_helpers.check_length_of_routes(parent1)
             if parent_fitness == float("inf"):
                 self.mutation_type = 'remove_high_capacities'
-                print('remove high')
+                # print('remove high')
             random_number = random.random()
             if random_number <= self.mutation_rate:
+                print('mutation', self.mutation_type)
                 child1 = self.ga_helpers.mutate(parent1, self.mutation_type)
                 mutation_check = self.check_geo_counts(child1)
                 if mutation_check == False:
@@ -113,34 +114,39 @@ class GeneticAlgorithm:
             else:
                 crossover_number = random.random()
                 if crossover_number <= self.crossover_type_choice:
+                    print('crossover remove_longest')
                     child1 = self.child_maker.crossover('remove_longest_detour', parent1)
                     remove_longest_detour = self.check_geo_counts(child1)
                     if remove_longest_detour == False:
                         print('remove_longest_detour failed')
                 elif crossover_number > self.crossover_type_choice:
+                    print('crossover append_closest')
                     child1 = self.child_maker.crossover('append_closest', parent1)
                     append_closest = self.check_geo_counts(child1)
                     if append_closest == False:
                         print('append_closest failed')
             child_fitness = self.fitness_evaluator.fitness(child1)
-            while child_fitness == float("inf"):
+            i = 0
+            while child_fitness == float("inf") and i < self.route_shuffle_amount:
                 child1 = self.ga_helpers.mutate(child1, 'remove_high_capacities')
                 child_fitness = self.fitness_evaluator.fitness(child1)
-                print('child was inf, now:', child_fitness)
+                i += 1
+                # print('child was inf, now:', child_fitness)
 
             if child_fitness >= (parent_fitness * self.acceptance_multiplier): #accepting slightly worse solutions
-                print('solution not better, shuffleing, parent - child', parent_fitness, child_fitness)
+                # print('solution not better, shuffleing, parent - child', parent_fitness, child_fitness)
                 i = 0
                 while i < self.route_shuffle_amount:
                     child1 = self.child_maker.crossover('random_crossover', parent1)
                     random_crossover = self.check_geo_counts(child1)
                     if random_crossover == False:
                         print('random failed')
+                        i += 1
                     else:
                         i += 1
                 i = 0
                 shuffled_child_fitness = self.fitness_evaluator.fitness(child1)
-                print('rebuilding, child fitness, shuffled_child_fitness', child_fitness, shuffled_child_fitness)
+                # print('rebuilding, child fitness, shuffled_child_fitness', child_fitness, shuffled_child_fitness)
                 if shuffled_child_fitness > (child_fitness * self.acceptance_multiplier):
                     while i < self.rebuilding_amount:
                         random_number = random.random()
@@ -163,11 +169,11 @@ class GeneticAlgorithm:
                                     print('append_closest failed')
                         i += 1
                     child_fitness = self.fitness_evaluator.fitness(child1)
-                    print('rebuild done, fitness:', child_fitness)
+                    # print('rebuild done, fitness:', child_fitness)
                     while child_fitness == float("inf"):
                         child1 = self.ga_helpers.mutate(child1, 'remove_high_capacities')
                         child_fitness = self.fitness_evaluator.fitness(child1)
-                        print('child was inf, now:', child_fitness)
+                        # print('child was inf, now:', child_fitness)
 
             new_population.extend([child1])
         self.population = new_population
@@ -202,12 +208,12 @@ class GeneticAlgorithm:
             self.evolve()
             generational_best = min(self.population, key=self.fitness_evaluator.fitness)
             generational_best_fitness = self.fitness_evaluator.fitness(generational_best)
-            print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
+            # print(f'Generation {generation}: Best Fitness = {generational_best_fitness}')
             cost_per_generation_dict[generation] = generational_best_fitness
             if generational_best_fitness == float("inf"):
                 self.mutation_type = 'remove_high_capacities'
             if generational_best_fitness < global_best_fitness:
-                print('New record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
+                print('Generation: ', {generation},' New record! Old: ', global_best_fitness, 'New: ', generational_best_fitness)
                 print(generational_best)
                 global_best = generational_best
                 global_best_fitness = generational_best_fitness
@@ -217,7 +223,7 @@ class GeneticAlgorithm:
         print('COST PER GENERATION DICT')
         print(cost_per_generation_dict)
         routes_with_spots = self.ga_helpers.reverse_transform_routes(global_best)
-        return routes_with_spots
+        return routes_with_spots, global_best
 
     def check_geo_counts(self, child):
         try:

@@ -125,18 +125,19 @@ class GeneticAlgorithmHelpers:
 
             for driver_id_to_assign, geo_ids in child.items():
                 for geo_index_to_assign, geo_id in enumerate(geo_ids):
-                    if geo_id == closest_geo_to_assign:
-                        if not inserted:
-                            parent[driver_id_to_assign].insert(geo_index_to_assign, geo_id_to_swap)
-                            try:
-                                parent[driver_id_to_swap].remove(geo_id_to_swap)
-                                inserted = True
-                            except ValueError:
-                                print('valueerror')
+                    if geo_index_to_assign >= 2 or geo_index_to_assign < len(geo_ids) - 2:
+                        if geo_id == closest_geo_to_assign:
+                            if not inserted:
+                                parent[driver_id_to_assign].insert(geo_index_to_assign, geo_id_to_swap)
+                                try:
+                                    parent[driver_id_to_swap].remove(geo_id_to_swap)
+                                    inserted = True
+                                except ValueError:
+                                    print('valueerror')
 
-                        elif inserted:
-                            parent = self.routes_sorter(parent)
-                            return parent
+                            elif inserted:
+                                parent = self.routes_sorter(parent)
+                                return parent
 
         else:
             print('No close stops found, not mutating')
@@ -150,7 +151,7 @@ class GeneticAlgorithmHelpers:
         for operator, route in child.items():
             operator_capacity = self.vehicle_capacity[operator]
             total_route_load = 0
-            for index in range(len(route) - 1):
+            for index in range(len(route)):
                 if index > 2 and index < len(route) - 2:
                     geo_id = route[index]
                     total_route_load += self.geo_avg_no_crates[geo_id]

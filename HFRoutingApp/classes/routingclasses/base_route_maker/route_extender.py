@@ -27,10 +27,10 @@ class RouteExtender:
         # return inserted_routes
         #TODO: Uncomment after Tuner is done
 
-        optimized_routes = self.genetic_algorithm.do_evolution(inserted_routes)
+        optimized_routes, routes_with_spots = self.genetic_algorithm.do_evolution(inserted_routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
-        return prepared_routes
+        return prepared_routes, routes_with_spots
 
     def create_queues(self, operators, remaining_spots):
         """

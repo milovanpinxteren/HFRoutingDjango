@@ -53,12 +53,18 @@ class HyperparameterTuner:
 def evaluate_ga(params, routes):
     ga = GeneticAlgorithm()
     cost_calculator = CalculateCostPerRoute()
-    ga.population_size = params['population_size']
-    ga.generations = params['generations']
+    # ga.population_size = params['population_size']
+    # ga.generations = params['generations']
+    # ga.mutation_rate = params['mutation_rate']
+    # ga.random_rate = params['random_rate']
+    # ga.elitism_count = params['elitism_count']
+    # ga.tournament_size = params['tournament_size']
     ga.mutation_rate = params['mutation_rate']
-    ga.random_rate = params['random_rate']
-    ga.elitism_count = params['elitism_count']
-    ga.tournament_size = params['tournament_size']
+    ga.crossover_type_choice = params['crossover_type_choice']
+    ga.route_shuffle_amount = params['route_shuffle_amount']
+    ga.rebuilding_amount = params['rebuilding_amount']
+    ga.acceptance_multiplier = params['acceptance_multiplier']
+
 
     best_solution = ga.do_evolution(routes)
 
@@ -69,14 +75,27 @@ def evaluate_ga(params, routes):
     return best_fitness['total']
 
 
+# self.mutation_rate = 0.6
+# self.crossover_type_choice = 0.5
+# self.route_shuffle_amount = 25
+# self.rebuilding_amount = 20
+# self.acceptance_multiplier = 1.1
+
+
 # Define the hyperparameter space
 hyperparameter_space = {
-    'population_size': list(range(10, 50, 10)),
-    'generations': list(range(50, 250, 50)),
     'mutation_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
-    'random_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
-    'elitism_count': list(range(4, 16, 4)),
-    'tournament_size': list(range(1, 13, 3))
+    'crossover_type_choice': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
+    'route_shuffle_amount': list(range(5, 25, 10)),
+    'rebuilding_amount': list(range(5, 25, 10)),
+    'acceptance_multiplier': [0.8, 1, 1.2]
+
+    # 'population_size': list(range(10, 50, 10)),
+    # 'generations': list(range(50, 250, 50)),
+    # 'mutation_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
+    # 'random_rate': [0 + 0.2 * i for i in range(int((1 - 0) / 0.2))],
+    # 'elitism_count': list(range(4, 16, 4)),
+    # 'tournament_size': list(range(1, 13, 3))
 }
 
 # Create the tuner and perform grid search
