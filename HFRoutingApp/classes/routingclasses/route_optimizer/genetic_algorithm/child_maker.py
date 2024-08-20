@@ -5,7 +5,7 @@ from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.helpe
 
 class ChildMaker:
     def __init__(self, geos_to_spot, unchangeable_geos, operator_geo_dict, distance_matrix, geo_avg_no_crates,
-                 vehicle_capacity, helpers):
+                 vehicle_capacity, helpers, detour_cut_off_number):
         self.distance_matrix = distance_matrix
         self.geos_to_spot_len = len(geos_to_spot)
         self.unchangeable_geos = unchangeable_geos
@@ -13,6 +13,7 @@ class ChildMaker:
         self.geo_avg_no_crates = geo_avg_no_crates
         self.vehicle_capacity = vehicle_capacity
         self.helpers = helpers
+        self.detour_cut_off_number = detour_cut_off_number
 
     def crossover(self, crossover_type, parent1):
         if crossover_type == 'append_closest':
@@ -45,7 +46,7 @@ class ChildMaker:
                         detours.append((distance_saving, route[index], operator, index))
 
         detours.sort(reverse=True, key=lambda x: x[0])
-        top_25_percent_index = max(1, len(detours) // 10)  # Ensure at least one item is selected
+        top_25_percent_index = max(1, len(detours) // self.detour_cut_off_number)
         top_detours = detours[:top_25_percent_index]
         selected_saving, stop_to_remove, operator_to_remove_from, index_to_remove = random.choice(top_detours)
 

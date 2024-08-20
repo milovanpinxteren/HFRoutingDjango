@@ -151,7 +151,7 @@ class GeneticAlgorithmHelpers:
         for operator, route in child.items():
             operator_capacity = self.vehicle_capacity[operator]
             total_route_load = 0
-            for index in range(len(route)):
+            for index in reversed(range(len(route))):
                 if index > 2 and index < len(route) - 2:
                     geo_id = route[index]
                     total_route_load += self.geo_avg_no_crates[geo_id]
@@ -160,16 +160,25 @@ class GeneticAlgorithmHelpers:
                         assignment_needed.append(geo_id)
                         route.pop(index)
                         total_route_load -= self.geo_avg_no_crates[geo_id]
-                    if assignment_needed and (
-                            total_route_load + self.geo_avg_no_crates[assignment_needed[0]]) <= operator_capacity and \
-                            (geo_id not in self.unchangeable_geos):
-                        child[operator].insert(index, assignment_needed[0])
-                        total_route_load += self.geo_avg_no_crates[assignment_needed[0]]
-                        assignment_needed.pop(0)
-                    # else:
-                    #     print('overloading stop not yet found')
-        return child
 
+        for geo_id in assignment_needed:
+            inserted = False
+            for operator, route in child.items():
+                if not inserted:
+                    operator_capacity = self.vehicle_capacity[operator]
+                    total_route_load = sum(self.geo_avg_no_crates[existing_geo_id] for existing_geo_id in route)
+                    if total_route_load + self.geo_avg_no_crates[geo_id] <= operator_capacity:
+                        route.insert(3, geo_id) #insert it on the third spot (arbitrary)
+                        total_route_load += self.geo_avg_no_crates[geo_id]
+                        inserted = True
+                        break
+
+
+            if not inserted:
+                print('failed to insert')
+
+
+        return child
 
     def routes_sorter(self, routes):
         new_routes = {}
