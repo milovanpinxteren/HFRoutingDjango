@@ -1,5 +1,6 @@
 from queue import PriorityQueue
 
+from HFRoutingApp.classes.decisionmaker_classes.decision_maker import DecisionMaker
 from HFRoutingApp.classes.routingclasses.helpers.calculate_cost_per_route import CalculateCostPerRoute
 from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.genetic_algorithm import GeneticAlgorithm
@@ -13,6 +14,7 @@ class RouteExtender:
         self.cost_calculator = CalculateCostPerRoute()
         self.genetic_algorithm = GeneticAlgorithm()
         self.group_assigner = GroupAssigner()
+        self.decision_maker = DecisionMaker()
 
     def extend_route(self, routes, remaining_spots, operators):
         routes, remaining_spots = self.group_assigner.assign_groups(routes, remaining_spots, operators)
@@ -29,6 +31,17 @@ class RouteExtender:
 
         optimized_routes, routes_with_spots = self.genetic_algorithm.do_evolution(inserted_routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
+        # routes_with_decision = self.decision_maker.make_decision(routes_with_spots)
+        i = 0
+        while i < 5:
+            routes_with_decision = self.decision_maker.make_decision(routes_with_spots)
+            optimized_routes, routes_with_spots = self.genetic_algorithm.do_evolution(routes_with_decision)
+            costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
+            i += 1
+
+
+
+
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)
         return prepared_routes, routes_with_spots
 
@@ -66,7 +79,9 @@ class RouteExtender:
                 elif operators_tried >= operators_count:
                     print('Could not assign all spots to operators due to capacity constraint')
                 elif queue.empty():
-                    return routes
+                    print('empty queue')
+                    operators_tried += 1
+                    # return routes
 
         return routes
 

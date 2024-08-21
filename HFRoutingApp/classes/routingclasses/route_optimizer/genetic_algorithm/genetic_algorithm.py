@@ -51,7 +51,7 @@ class GeneticAlgorithm:
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
         self.population_size = 60
-        self.generations = 150  # 1300
+        self.generations = 20  # 1300
         self.mutation_rate = 0.2
         self.crossover_type_choice = 0.5
         self.route_shuffle_amount = 15
@@ -134,7 +134,7 @@ class GeneticAlgorithm:
                 # print('child was inf, now:', child_fitness)
 
             if child_fitness >= (parent_fitness * self.acceptance_multiplier): #accepting slightly worse solutions
-                print('solution not better, shuffleing, parent - child', parent_fitness, child_fitness)
+                # print('solution not better, shuffleing, parent - child', parent_fitness, child_fitness)
                 i = 0
                 while i < self.route_shuffle_amount:
                     shuffled_child = self.child_maker.crossover('random_crossover', child1)
@@ -150,7 +150,7 @@ class GeneticAlgorithm:
                 shuffled_child_fitness = self.fitness_evaluator.fitness(child1)
                 # print('rebuilding, child fitness, shuffled_child_fitness', child_fitness, shuffled_child_fitness)
                 if shuffled_child_fitness > (child_fitness * self.acceptance_multiplier):
-                    print('rebuilding')
+                    # print('rebuilding')
                     while i < self.rebuilding_amount:
                         random_number = random.random()
                         if random_number <= self.mutation_rate:
@@ -190,6 +190,8 @@ class GeneticAlgorithm:
                     vehicle_array.append(stop.geo_id)
                 elif isinstance(stop, Spot):
                     vehicle_array.append(stop.location.geo_id)
+                else: #If the route constists already of geo_ids
+                    vehicle_array.append(stop)
             transformed_routes[vehicle] = vehicle_array
         print('Begin routes:', transformed_routes)
         # original_len = 0

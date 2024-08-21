@@ -21,6 +21,7 @@ class DecisionMaker:
 
     def make_decision(self, routes):
         items_per_stop = self.get_items_per_stop()
+        stops_to_remove = []
 
         for operator, route in routes.items():
             route_distance = sum(self.distance_matrix[route[i]][route[i + 1]] for i in range(len(route) - 1))
@@ -37,6 +38,17 @@ class DecisionMaker:
                 stop_cost = distance_saving * self.cost_per_km
                 if stop_cost > stop_profit:
                     print('Advising to remove stop', route[index], ' from route ', operator, 'Would save ', stop_cost - stop_profit)
+                    print(route)
+                    # route.pop(index)
+                    stops_to_remove.append((operator, index))
+                elif stop_profit < stop_cost + 10:
+                    print('Earning less than 10 euros on this stop', route[index], operator)
+                    print(route)
+                    # route.pop(index)
+                    stops_to_remove.append((operator, index))
+
+        for operator, index in sorted(stops_to_remove, key=lambda x: x[1], reverse=True):
+            routes[operator].pop(index)
 
 
 

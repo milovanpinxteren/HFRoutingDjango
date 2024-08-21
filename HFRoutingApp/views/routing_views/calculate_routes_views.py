@@ -29,7 +29,7 @@ def calculate_routes_for_date(request):
     # try:
     print('calculate for dates')
     stop_getter = StopGetter()
-    decision_maker = DecisionMaker()
+
     date = request.GET.get('date', None)
     stops = stop_getter.get_stops_on_date(date)
     operator_quantity_checker = OperatorQuantityChecker()
@@ -47,7 +47,7 @@ def calculate_routes_for_date(request):
     print('making mandatory routes', stops)
     routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(stops, date)
     extended_routes, route_with_spots = route_extender.extend_route(routes, remaining_spots, operators)
-    routes_with_decision = decision_maker.make_decision(route_with_spots)
+
     routes_map = map_maker.make_map(extended_routes, 'routes')
 
     context.update({'routes': True, 'map': routes_map._repr_html_()})

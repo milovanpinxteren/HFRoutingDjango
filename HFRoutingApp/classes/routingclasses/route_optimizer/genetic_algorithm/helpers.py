@@ -156,7 +156,7 @@ class GeneticAlgorithmHelpers:
                     geo_id = route[index]
                     total_route_load += self.geo_avg_no_crates[geo_id]
                     if total_route_load > operator_capacity:
-                        print('overload:', operator, route)
+                        # print('overload:', operator, route)
                         assignment_needed.append(geo_id)
                         route.pop(index)
                         total_route_load -= self.geo_avg_no_crates[geo_id]
