@@ -50,15 +50,15 @@ class GeneticAlgorithm:
                                                spot_counts_dict[geo_id]
             self.geo_avg_no_crates[geo_id] += (spot.avg_no_crates or 0) / spot_counts_dict[geo_id]
         # Hyperparameters
-        self.population_size = 60
-        self.generations = 20  # 1300
-        self.mutation_rate = 0.2
-        self.crossover_type_choice = 0.5
-        self.route_shuffle_amount = 15
-        self.rebuilding_amount = 15
+        self.population_size = 90 #60
+        self.generations = 40  # 1300
+        self.mutation_rate = 0.55 #0.2
+        self.crossover_type_choice = 0.7 #0.5
+        self.route_shuffle_amount = 50 #15
+        self.rebuilding_amount = 70 #15
         self.acceptance_multiplier = 1.1
-        self.tournament_size = 10
-        self.elitism_count = 4
+        self.tournament_size = 8 #10
+        self.elitism_count = 2 #4
         self.detour_cut_off_number = 6 #Fraction of detours to be considered for the random pick in the remove_longest_detour_crossover
 
         self.travel_time_exceeded_penalty = 4000

@@ -1,3 +1,4 @@
+import time
 from itertools import islice
 from django.db.models import Value
 
@@ -34,6 +35,7 @@ class DistanceMatrixUpdater:
                                 for destination_id, destination_info in chunk.items()]
                 gmaps_response = gmaps.distance_matrix((origin_info['lat'], origin_info['lon']), destinations,
                                                        mode="driving")
+                time.sleep(1)
                 for index, distance_row in enumerate(gmaps_response['rows'][0]['elements']):
                     destination_id = list(chunk.keys())[index]
                     if distance_row['status'] == 'OK':

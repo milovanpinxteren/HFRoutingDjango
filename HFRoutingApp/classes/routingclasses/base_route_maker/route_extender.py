@@ -6,6 +6,7 @@ from HFRoutingApp.classes.routingclasses.helpers.route_utils import RouteUtils
 from HFRoutingApp.classes.routingclasses.route_optimizer.genetic_algorithm.genetic_algorithm import GeneticAlgorithm
 from HFRoutingApp.classes.routingclasses.route_optimizer.group_assigner import GroupAssigner
 from HFRoutingApp.models import Operator, Hub, Spot
+import time
 
 
 class RouteExtender:
@@ -17,6 +18,7 @@ class RouteExtender:
         self.decision_maker = DecisionMaker()
 
     def extend_route(self, routes, remaining_spots, operators):
+        start_time = time.time()
         routes, remaining_spots = self.group_assigner.assign_groups(routes, remaining_spots, operators)
         print('extending')
         queues = self.create_queues(operators, remaining_spots)
@@ -31,15 +33,35 @@ class RouteExtender:
 
         optimized_routes, routes_with_spots = self.genetic_algorithm.do_evolution(inserted_routes)
         costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
-        # routes_with_decision = self.decision_maker.make_decision(routes_with_spots)
         i = 0
         while i < 5:
-            routes_with_decision = self.decision_maker.make_decision(routes_with_spots)
+            routes_with_decision, total_profit = self.decision_maker.make_decision(routes_with_spots)
             optimized_routes, routes_with_spots = self.genetic_algorithm.do_evolution(routes_with_decision)
             costs = self.cost_calculator.calculate_cost_per_route(optimized_routes)
             i += 1
 
 
+        total_original_stops = 0
+        original_operator_counter = 0
+        for operator, route in inserted_routes.items():
+            original_operator_counter += 1
+            for index in range(0, len(route)):
+                total_original_stops += 1
+
+        total_stops = 0
+        operator_counter = 0
+        for operator, route in routes_with_spots.items():
+            operator_counter += 1
+            for index in range(0, len(route)):
+                total_stops += 1
+
+        elapsed_time = time.time() - start_time
+        print(f'Time elapsed: {elapsed_time:.2f} seconds')
+        print('profit', total_profit)
+        print('total_original_stops', total_original_stops)
+        print('total original operators', original_operator_counter)
+        print('total_stops', total_stops)
+        print('totaal operators', operator_counter)
 
 
         prepared_routes = self.prepare_routes_for_map(optimized_routes, costs)

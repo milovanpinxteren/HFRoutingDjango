@@ -41,12 +41,12 @@ class Customer(models.Model):
         return self.shortcode
 
 
-class Location(models.Model): #wordt Geo
+class Location(models.Model):
     shortcode = models.CharField(max_length=7)
     description = models.CharField(max_length=80)
-    geo = models.ForeignKey(Geo, models.PROTECT, blank=True, null=True)
+    geo = models.ForeignKey(Geo, models.CASCADE, blank=True, null=True)
     active = models.BooleanField(default=True)
-    customer = models.ForeignKey(Customer, models.PROTECT, default=None, limit_choices_to={'active': True},
+    customer = models.ForeignKey(Customer, models.CASCADE, default=None, limit_choices_to={'active': True},
                                  verbose_name=Customer._meta.verbose_name)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -93,7 +93,7 @@ class Spot(models.Model):
     description = models.CharField(max_length=80)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    location = models.ForeignKey(Location, models.PROTECT, default=None, limit_choices_to={'active': True},)
+    location = models.ForeignKey(Location, models.CASCADE, default=None, limit_choices_to={'active': True},)
     updated_at = models.DateTimeField(auto_now=True)
     is_catering = models.BooleanField(default=False)
     pilot = models.BooleanField(default=False)

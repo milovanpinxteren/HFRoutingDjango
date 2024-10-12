@@ -18,10 +18,12 @@ class DecisionMaker:
         self.driver_wage = 20 #in euro
         self.average_speed = 50 #in km/h
         self.cost_per_km = (self.driver_wage / self.average_speed) + (self.gas_price * self.fuel_consumption)
-
+        #0.224
+        #gas and com is 0.14
     def make_decision(self, routes):
         items_per_stop = self.get_items_per_stop()
         stops_to_remove = []
+        total_profit = 0
 
         for operator, route in routes.items():
             route_distance = sum(self.distance_matrix[route[i]][route[i + 1]] for i in range(len(route) - 1))
@@ -36,9 +38,10 @@ class DecisionMaker:
                 items_to_drop = items_per_stop[route[index]]
                 stop_profit = items_to_drop * self.profit_per_item
                 stop_cost = distance_saving * self.cost_per_km
+                total_profit += (stop_profit)
                 if stop_cost > stop_profit:
                     print('Advising to remove stop', route[index], ' from route ', operator, 'Would save ', stop_cost - stop_profit)
-                    print(route)
+                    # print(route)
                     # route.pop(index)
                     stops_to_remove.append((operator, index))
                 elif stop_profit < stop_cost + 10:
@@ -52,7 +55,7 @@ class DecisionMaker:
 
 
 
-        return routes
+        return routes, total_profit
 
     def get_items_per_stop(self):
         items_per_stop = defaultdict(float)
@@ -63,3 +66,5 @@ class DecisionMaker:
             geo_id = spot.location.geo.geo_id
             items_per_stop[geo_id] += (spot.avg_no_crates * self.items_per_crate or 0) / spot_counts_dict[geo_id]
         return items_per_stop
+
+    # def calculate_profit(self):

@@ -75,8 +75,8 @@ def make_base_routes(request):
     map_maker = MapMaker()
 
     routes, remaining_spots, operators = mandatory_route_maker.make_mandatory_routes(False, False)
-    extended_routes = route_extender.extend_route(routes, remaining_spots, operators)
-    routes_map = map_maker.make_map(extended_routes, 'routes')
+    prepared_routes, routes_with_spots = route_extender.extend_route(routes, remaining_spots, operators)
+    routes_map = map_maker.make_map(prepared_routes, 'routes')
 
     context = {'routes': True, 'map': routes_map._repr_html_()}
     return render(request, 'routes/routes_overview.html', context)

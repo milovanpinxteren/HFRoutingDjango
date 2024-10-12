@@ -43,7 +43,10 @@ class GeneticAlgorithmHelpers:
                         geo_ids) - 2 and geo_id not in self.unchangeable_geos:  # each other location
                     for index2, other_geo_id in enumerate(geo_ids):
                         if index2 >= 2 or index2 < len(geo_ids) - 2:
-                            distance = self.distance_matrix[geo_id][other_geo_id]
+                            try:
+                                distance = self.distance_matrix[geo_id][other_geo_id]
+                            except Exception as e:
+                                print('error in distance_matrix')
                             total_distance_to_stops += distance
                             if total_distance_to_stops > max_distance_to_stops:
                                 max_distance_to_stops = total_distance_to_stops
@@ -191,10 +194,15 @@ class GeneticAlgorithmHelpers:
                 nearest_distance = float('inf')
 
                 for other_geo_id in remaining_geo_ids:
-                    distance = self.distance_matrix[last_geo_id][other_geo_id]
-                    if 0 < distance < nearest_distance or other_geo_id == last_geo_id:
-                        nearest_distance = distance
+                    try:
+                        distance = self.distance_matrix[last_geo_id][other_geo_id]
+                        if 0 < distance < nearest_distance or other_geo_id == last_geo_id:
+                            nearest_distance = distance
+                            nearest_neighbour = other_geo_id
+                    except Exception as e:
+                        print('Sorting error', e)
                         nearest_neighbour = other_geo_id
+                        #TODO: fix this
 
                 if nearest_neighbour is not None:
                     route.append(nearest_neighbour)
